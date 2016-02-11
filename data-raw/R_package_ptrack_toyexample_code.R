@@ -1,3 +1,11 @@
+# #consolidated into one toyROMS with
+
+toyROMS <- toyROMS58[c("lon_u", "lat_u", "h", "hh")]
+toyROMS$i_u <- abind(toyROMS58$i_u1, toyROMS59$i_u2, toyROMS60$i_u3, toyROMS61$i_u4, along = 4)
+toyROMS$i_v <- abind(toyROMS58$i_v1, toyROMS59$i_v2, toyROMS60$i_v3, toyROMS61$i_v4, along = 4)
+toyROMS$i_w <- abind(toyROMS58$i_w1, toyROMS59$i_w2, toyROMS60$i_w3, toyROMS61$i_w4, along = 4)
+save(toyROMS, file = "data/toyROMS.rdata", compress = "bzip2")
+
 ###########################################################################################################################
 ## read in parameters from netcdf-files and grids
 ## adjust dimensions of variables

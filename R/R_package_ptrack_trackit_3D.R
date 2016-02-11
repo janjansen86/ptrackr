@@ -1,12 +1,28 @@
-###########################################################################################################################
-## function to track particles through a ROMS-field
-###########################################################################################################################
-## the function needs an input for speed of the sinking particles (w_sink) and for time
-## due to the limitation of RAM available, time is restricted depending on the number of particles
-## (too long runs might give an error because the generated vector is too large)
-## I found half days work great
+#' Trackit 3D
+#'
+#' Function to track particles through a ROMS-field.
+#'
+#' the function needs an input for speed of the sinking particles (w_sink) and for time
+#' due to the limitation of RAM available, time is restricted depending on the number of particles
+#' (too long runs might give an error because the generated vector is too large)
+#' I found half days work great
+#'
+#' @param pts input points
+#' @param kdtree kd tree
+#' @param w_sink sinking rate m/days, time is days
+#' @param time days
+#'
+#' @return list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices = indices, indices_2D = indices_2D)
+#' @export
+#'
+trackit_3D <- function(pts, w_sink=86.4, time=50){
 
-trackit_3D <- function(w_sink=86.4,time=50){                       ## w_sink is m/days, time is days
+  sknn <- with(romsobject, setup_knn(lon_u, lat_u, hh))             # (lon_roms=lon_u, lat_roms=lat_u, depth_roms=hh)
+  kdtree <- sknn$kdtree
+  kdxy <- sknn$kdxy
+
+  i_u <- rom## TBC
+  ## w_sink is m/days, time is days
   w_sink <- -w_sink/(60*60*24)                               ## sinking speed transformation
   ntime <- time*24*2                                         ## days transformation
   time_step <- 30*60                                         ## half hour time steps

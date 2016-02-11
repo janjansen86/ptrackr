@@ -1,6 +1,17 @@
 ## setup k-nearest-neighbour upfront for use in the particle tracking loops
 ## lookup to which ROMS-cell a particle belongs
 
+#' Setup knn lookup to which ROMS-cell a particle belongs
+#'
+#' Setup k-nearest-neighbour upfront for use in the particle tracking loops.
+#'
+#' Details
+#' @param lon_roms longitude values of ROMS grid
+#' @param lat_roms latitude values of ROMS grid
+#' @param depth_roms depth values of ROMS grid
+#'
+#' @return list, kdtree, kdxy
+#' @export
 setup_knn <- function(lon_roms=lon_u, lat_roms=lat_u, depth_roms=hh){
   library(nabor)
   ## another function: setup knn
