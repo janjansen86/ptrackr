@@ -42,20 +42,20 @@ hh <- array(rep(as.vector(h), length(Cs_wr)) * rep(Cs_wr, each = prod(dim(h))), 
 
 # toyROMS_data <- list(lon_u,lat_u,h,hh,i_u,i_v,i_w)
 # names(toyROMS_data) <- c("lon_u","lat_u","h","hh","i_u","i_v","i_w")
-# save(toyROMS_data, file="toyROMS_data.Rdata")
+# save(toyROMS_data, file="data/toyROMS_data.rda", compress = "bzip2"")
 
 # toyROMS58 <- list(lon_u,lat_u,h,hh,i_u,i_v,i_w)
 # names(toyROMS58) <- c("lon_u","lat_u","h","hh","i_u1","i_v1","i_w1")
-# save(toyROMS58, file="toyROMS58.Rdata")
+# save(toyROMS58, file="data/toyROMS58.rda", compress = "bzip2"")
 
 # toyROMS59 <- list(lon_u,lat_u,h,hh,i_u,i_v,i_w)
 # names(toyROMS59) <- c("lon_u","lat_u","h","hh","i_u2","i_v2","i_w2")
-# save(toyROMS59, file="toyROMS59.Rdata")
+# save(toyROMS59, file="data/toyROMS59.rda", compress = "bzip2"")
 
 # toyROMS60 <- list(lon_u,lat_u,h,hh,i_u,i_v,i_w)
 # names(toyROMS60) <- c("lon_u","lat_u","h","hh","i_u3","i_v3","i_w3")
-# save(toyROMS60, file="toyROMS60.Rdata")
+# save(toyROMS60, file="data/toyROMS60.rda", compress = "bzip2"")
 
 # toyROMS61 <- list(lon_u,lat_u,h,hh,i_u,i_v,i_w)
 # names(toyROMS61) <- c("lon_u","lat_u","h","hh","i_u4","i_v4","i_w4")
-# save(toyROMS61, file="toyROMS61.Rdata")
+# save(toyROMS61, file="data/toyROMS61.rda", compress = "bzip2"")
