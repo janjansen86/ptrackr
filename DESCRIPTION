@@ -1,0 +1,18 @@
+Package: ptrackr
+Type: Package
+Title: Tracking Individual Particles Through 3D-Space
+Version: 0.1
+Date: 2016-02-01
+Authors@R: person("Jan","Jansen", role = c("aut", "cre"), email =
+    "jan.jansen@utas.edu.au")
+Description: More about what it does (maybe more than one line)
+License: What license is it under?
+LazyData: TRUE
+Imports:
+    geostatsp,
+    nabor,
+    ncdf4,
+    raster,
+    spatstat,
+    stringr
+RoxygenNote: 5.0.1
