@@ -8,11 +8,11 @@ Authors@R: person("Jan","Jansen", role = c("aut", "cre"), email =
 Description: More about what it does (maybe more than one line)
 License: What license is it under?
 LazyData: TRUE
+Depends: raster
 Imports:
     geostatsp,
     nabor,
     ncdf4,
-    raster,
     spatstat,
     stringr
 RoxygenNote: 5.0.1

@@ -14,30 +14,31 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ptrackr)
 jChlA <- crop(surface_chl,extent(136.6,138.9,-66.31,-65.75))
 
-cpp <- create_points_pattern(jChlA, 10)   # (a_chl_raster,a_multiplicator=1,a_mixed_layer_depth=0)
+pts <- create_points_pattern(jChlA, 10)   # (a_chl_raster,a_multiplicator=1,a_mixed_layer_depth=0)
                                         
 
-pts <- cpp$pts
-
-## We need an id for each particle to follow individual tracks
-id_vec <- seq_len(nrow(pts))
-
-## start with toyROMS58
+## start with toyROMS 58
+roms58 <- extractROMS(toyROMS, time = 1)
 
 
+trackit_3D(pts, romsobject = roms58)
+```
+
+
+
+
+```{r,eval=FALSE,echo=FALSE}
 ## either static ROMS,
-curr_vector <- rep(1,400)   #for 1 slice over 100days
-all_i_u <- list(i_u)        #for multiple slices choose multiple i_u
-all_i_v <- list(i_v)        #for multiple slices choose multiple i_v
-all_i_w <- list(i_w)
+# curr_vector <- rep(1,400)   #for 1 slice over 100days
+# all_i_u <- list(i_u)        #for multiple slices choose multiple i_u
+# all_i_v <- list(i_v)        #for multiple slices choose multiple i_v
+# all_i_w <- list(i_w)
 # ## or multiple ROMS
 # curr_vector <- rep(1:4,400) #for 4 slices in 100days
 # all_i_u <- list(i_u1,i_u2,i_u3,i_u4)
 # all_i_v <- list(i_v1,i_v2,i_v3,i_v4)
 # all_i_w <- list(i_w1,i_w2,i_w3,i_w4)
 
-
-trackit_3D(pts)
 
 source("C:/Users/jjansen/Desktop/PhD/ptrackR_package/ptrackr/R/R_package_ptrack_loopit_V1.R")
 
@@ -125,3 +126,5 @@ flux_list <- split(testmatrix,testid)
 points(lon_u[flux_list[[1]]],lat_u[flux_list[[1]]],col="green")
 points(lon_u[flux_list[[15]]],lat_u[flux_list[[15]]],col="green")
 points(lon_u[flux_list[[5]]],lat_u[flux_list[[5]]],col="green")
+```
+

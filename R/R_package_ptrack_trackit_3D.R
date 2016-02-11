@@ -15,13 +15,20 @@
 #' @return list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices = indices, indices_2D = indices_2D)
 #' @export
 #'
-trackit_3D <- function(pts, w_sink=86.4, time=50){
+trackit_3D <- function(pts, romsobject, w_sink=86.4, time=50){
+
+
+  ## We need an id for each particle to follow individual tracks
+  id_vec <- seq_len(nrow(pts))
 
   sknn <- with(romsobject, setup_knn(lon_u, lat_u, hh))             # (lon_roms=lon_u, lat_roms=lat_u, depth_roms=hh)
   kdtree <- sknn$kdtree
   kdxy <- sknn$kdxy
 
-  i_u <- rom## TBC
+  i_u <- romsobject$i_u
+  i_v <- romsobject$i_v
+  i_w <- romsobject$i_w
+  h <- romsobject$h
   ## w_sink is m/days, time is days
   w_sink <- -w_sink/(60*60*24)                               ## sinking speed transformation
   ntime <- time*24*2                                         ## days transformation
@@ -29,14 +36,14 @@ trackit_3D <- function(pts, w_sink=86.4, time=50){
   ptrack <- array(0, c(length(as.vector(pts))/3, 3, ntime))  ## create an empty array to store particle-tracks
   stopped <- rep(FALSE, length(as.vector(pts))/3)            ## create a stopping-vector
   stopindex <- rep(0, length(as.vector(pts))/3)              ## a vector to store indices of when particles stopped
-  plast <- pts                                               ## copies of the starting points for updating in the loop
-  pnow <- plast
-  indices <- list()                                          ## a list of indices to store which 3D-cell a particle is in
-  indices_2D <- list()                                       ## a list of indices to store which 2D-cell a particle is in
-  #plot(pts, pch = ".")                                      ## to plot particles after each timestep
+  ## copies of the starting points for updating in the loop
+  pnow <- plast <- pts
+  indices <- vector("list", ntime)                           ## a list of indices to store which 3D-cell a particle is in
+  indices_2D <- vector("list", ntime)                        ## a list of indices to store which 2D-cell a particle is in
+
   for (itime in seq_len(ntime)) {
     ## index 1st nearest neighbour of trace points to grid points
-    dmap <- kdtree$query(plast, k = 1, eps = 0)           ## one kdtree from script "..._readit.R"
+    dmap <- kdtree$query(plast, k = 1, eps = 0)           ## one kdtree
     ## and to 2D space
     two_dim_pos <- kdxy$query(pnow[,1:2], k = 1, eps = 0)
 

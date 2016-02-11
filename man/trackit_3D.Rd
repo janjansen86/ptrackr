@@ -4,7 +4,7 @@
 \alias{trackit_3D}
 \title{Trackit 3D}
 \usage{
-trackit_3D(pts, w_sink = 86.4, time = 50)
+trackit_3D(pts, romsobject, w_sink = 86.4, time = 50)
 }
 \arguments{
 \item{pts}{input points}
