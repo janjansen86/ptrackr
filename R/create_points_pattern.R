@@ -21,6 +21,6 @@ create_points_pattern <- function(a_chl_raster, a_multiplicator = 1, a_mixed_lay
   lon <- ptspattern$x                     #get locations of all points
   lat <- ptspattern$y
   ## store the initial point-locations and save them for comparison later
-  pts <- cbind(lon,lat,as.vector(as.numeric(a_mixed_layer_depth)))
-  list(pts=pts)
+  cbind(lon,lat,as.vector(as.numeric(a_mixed_layer_depth)))
+
 }
