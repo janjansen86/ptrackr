@@ -9,13 +9,26 @@
 #'
 #' @param pts input points
 #' @param kdtree kd tree
-#' @param w_sink sinking rate m/days, time is days
-#' @param time days
+#' @param w_sink sinking rate m/days
+#' @param time total number of days to run the model
 #'
 #' @return list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices = indices, indices_2D = indices_2D)
 #' @export
-#'
-trackit_3D <- function(pts, romsobject, w_sink=86.4, time=50){
+#' @examples 
+#' data(surface_chl)
+#' data(toyROMS)
+#' pts <- create_points_pattern(surface_chl, multi=100)
+#' track <- trackit_3D(pts,toyROMS)
+#' 
+#' plot(pts)
+#' points(track$pnow, col="red")
+#' 
+#' library(rgl)
+#' plot3d(pts, zlim = c(-1500,1))
+#' plot3d(track$pnow, col="red", add=TRUE)
+#' 
+#' 
+trackit_3D <- function(pts, romsobject, w_sink=100, time=50){
 
 
   ## We need an id for each particle to follow individual tracks

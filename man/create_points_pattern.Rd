@@ -4,22 +4,28 @@
 \alias{create_points_pattern}
 \title{Generate points proportionally to surface chlorophyll-a values.}
 \usage{
-create_points_pattern(a_chl_raster, a_multiplicator = 1,
-  a_mixed_layer_depth = 0)
+create_points_pattern(raster, multi = 1, mld = 0)
 }
 \arguments{
-\item{a_chl_raster}{input chlorophyll RasterLayer}
+\item{raster}{input chlorophyll RasterLayer}
 
-\item{a_multiplicator}{scale}
+\item{multi}{multiplicator to control number of points}
 
-\item{a_mixed_layer_depth}{mixed layer depth}
+\item{mld}{mixed layer depth}
 }
 \value{
 list with matrix of longitude, latitude, mixed layer depth
 }
 \description{
-Transform surface-chlorophyll values into a randomly distributed relative number of points depending on the value of each cell
-needs a chlorophyll raster and a multiplicator value to determine the number of points
-mixed layer depth can be used to assign the third dimension (particles start from the surface at 0, from below surface at negative values)
+Transform surface-chlorophyll values into a randomly distributed relative number of points on a plane depending on the value of each cell.
+A multiplicator value is used to control the total number of points. A mixed layer depth is defined in the third column (particles are at the surface at zero, below surface at negative values)
+}
+\examples{
+ 
+data(surface_chl)
+pts <- create_points_pattern(surface_chl, multi=1000)
+plot(surface_chl)
+points(pts,cex=0.1)
+
 }
 

@@ -2,5 +2,6 @@
 
 export(create_points_pattern)
 export(extractROMS)
+export(loopit)
 export(setup_knn)
 export(trackit_3D)
