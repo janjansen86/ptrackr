@@ -1,9 +1,3 @@
-
-## this allows to track even a great number of particles all the way to the seafloor without producing errors due to limited RAM
-## the loop runs in half-day intervals
-## if no runtime is defined, the function will loop depending on the depth of the deepest cell and the sinking speed to allow each particle to possibly sink to the seafloor (2*max(h)/speed)
-## if a runtime is defined, it is measured in days
-
 #' Loopit
 #'
 #' Loop trackit_3D to follow particles through different consecutive ROMS-sclices. Looping can also increase performance when using very large number of particles by looping through shorter time steps.
