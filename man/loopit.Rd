@@ -4,7 +4,8 @@
 \alias{loopit}
 \title{Loopit}
 \usage{
-loopit(speed, runtime, trajectories = FALSE)
+loopit(pts_seeded, romsobject, speed, runtime = 10, looping_time = 0.5,
+  roms_slices = 1, trajectories = FALSE)
 }
 \arguments{
 \item{speed}{(w_sink) sinking rate m/days}
@@ -23,21 +24,19 @@ Loops are set to run in half day intervals. If no runtime is defined, the functi
 \examples{
 data(surface_chl)
 data(toyROMS)
-pts <- create_points_pattern(surface_chl, multi=100)
+pts_seeded <- create_points_pattern(surface_chl, multi=100)
 h <- toyROMS$h
 all_i_u <- toyROMS$i_u
 all_i_v <- toyROMS$i_v
 all_i_w <- toyROMS$i_w
 
+## run the tracking for a given sinking speed
+run <- loopit(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 5)
 
-track <- loopit(speed = 100, runtime = 50, romsobject = toyROMS)
-
-plot(pts)
-points(track$pnow, col="red")
-
+## check the results
 library(rgl)
-plot3d(pts, zlim = c(-1500,1))
-plot3d(track$pnow, col="red", add=TRUE)
+plot3d(pts_seeded, zlim = c(-1500,1))
+plot3d(run$ptrack[,,24], col="red", add=TRUE)
 
 }
 

@@ -18,28 +18,30 @@
 #' @examples 
 #' data(surface_chl)
 #' data(toyROMS)
-#' pts <- create_points_pattern(surface_chl, multi=100)
+#' pts_seeded <- create_points_pattern(surface_chl, multi=100)
 #' h <- toyROMS$h
 #' all_i_u <- toyROMS$i_u
 #' all_i_v <- toyROMS$i_v
 #' all_i_w <- toyROMS$i_w
 #' 
-#' track <- loopit(speed = 100, runtime = 50)
+#' ## run the tracking for a given sinking speed
+#' run <- loopit(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 5)
 #' 
-#' #plot(pts)
-#' #points(track$pnow, col="red")
-#' 
-#' #library(rgl)
-#' #plot3d(pts, zlim = c(-1500,1))
-#' #plot3d(track$pnow, col="red", add=TRUE)
-
+#' ## check the results
+#' library(rgl)
+#' plot3d(pts_seeded, zlim = c(-1500,1))
+#' plot3d(run$ptrack[,,24], col="red", add=TRUE)
 #' 
 
-loopit <- function(speed, runtime, trajectories=FALSE){
+loopit <- function(pts_seeded, romsobject, speed, runtime = 10, looping_time = 0.5, roms_slices = 1, trajectories=FALSE){
+  
+  pts <- pts_seeded
+  
   ## create lists to store all particles that settled at the end of each tracking-loop
   lon_list <- list()
   lat_list <- list()
   depth_list <- list()
+  
   ## create lists to store the positions of each particle in each time-step
   if(missing(trajectories)){
     trajectories=FALSE
@@ -51,9 +53,12 @@ loopit <- function(speed, runtime, trajectories=FALSE){
   if (missing(runtime)){
     runtime <- ceiling(max(h)/speed)                  ## no runtime defined
   } else runtime <- runtime                           ## runtime defined
-  curr_vector <- rep(1:4,runtime)
-  runtime <- 4*runtime                                ## counting full days
-  for(irun in 1:runtime){                             ## loop over different time-slices
+  curr_vector <- rep(1:roms_slices,runtime)
+  runtime <- roms_slices*runtime                                ## counting full days
+  
+  ## loop over different time-slices
+  for(irun in 1:runtime){                             
+    
     ## assign current-speed/direction to the cells, this should be done differently
     i_u <<- all_i_u[,,,curr_vector[irun]]
     i_v <<- all_i_v[,,,curr_vector[irun]]
@@ -65,7 +70,8 @@ loopit <- function(speed, runtime, trajectories=FALSE){
     }
     
     ## run the particle-tracking for all floating particles
-    obj <- trackit_3D(speed,days)
+    obj <- trackit_3D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time)
+    
     ## store the particles that stopped (settled)
     lon_list[irun] <- list(obj$ptrack[cbind(seq(nrow(obj$ptrack)), 1, obj$stopindex)])
     lat_list[irun] <- list(obj$ptrack[cbind(seq(nrow(obj$ptrack)), 2, obj$stopindex)])
@@ -80,13 +86,14 @@ loopit <- function(speed, runtime, trajectories=FALSE){
     }
     
     ##re-assign coordinates of floating particles to re-run in "trackit"-function
-    if (length(unlist(lon_list))!=nrow(check)                                 ## check if all particles are settled
+    if (length(unlist(lon_list))!=nrow(pts_seeded)                                 ## check if all particles are settled
         & !is.null(nrow(obj$ptrack[obj$stopindex==0,,dim(obj$ptrack)[3]]))    ## if there's only one particle left it bugs around...
         & length(lon_list)!=runtime){                                         ## if the run stops before all particles are settled, pts should not be overwritten
       ## Mike doesn't like this!! But it works... How to do it better?
       pts <<- matrix(obj$ptrack[obj$stopindex==0,,dim(obj$ptrack)[3]],ncol=3)
     } else break
   }
+  
   ## store stopping-locations of particles
   pend <- cbind(unlist(lon_list), unlist(lat_list), unlist(depth_list))
   

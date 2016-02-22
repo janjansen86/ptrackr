@@ -31,7 +31,7 @@ I found half days work great
 data(surface_chl)
 data(toyROMS)
 pts <- create_points_pattern(surface_chl, multi=100)
-track <- trackit_3D(pts,toyROMS)
+track <- trackit_3D(pts = pts, romsobject = toyROMS)
 
 plot(pts)
 points(track$pnow, col="red")
