@@ -33,13 +33,33 @@ data(toyROMS)
 pts <- create_points_pattern(surface_chl, multi=100)
 track <- trackit_3D(pts = pts, romsobject = toyROMS)
 
-plot(pts)
-points(track$pnow, col="red")
-
-library(rgl)
-plot3d(pts, zlim = c(-1500,1))
-plot3d(track$pnow, col="red", add=TRUE)
 
 
+## checking the results
+# plot(pts)
+# points(track$pnow, col = "red")
+
+# library(rgl)
+# plot3d(pts, zlim = c(-1500,1))
+# plot3d(track$pnow, col = "red", add = TRUE)
+
+## better:
+library(rasterVis)
+library(rgdal)
+
+ra <- raster(nrow = 50, ncol = 50, ext = extent(surface_chl))
+r_roms <- rasterize(x = cbind(as.vector(toyROMS$lon_u), as.vector(toyROMS$lat_u)), y = ra, field = as.vector(-toyROMS$h))
+pr <- projectRaster(r_roms, crs = "+proj=laea +lon_0=137 +lat_0=-66")  #get the right projection (through the centre)
+
+plot3D(pr, adjust = FALSE, zfac = 50)                    # plot bathymetry with 50x exaggerated depth
+points <- matrix(NA, ncol=3, nrow=dim(track$ptrack)[1])  # get Tracking-points
+for(i in seq_len(dim(track$ptrack)[1])){
+  points[i,] <- track$ptrack[i,,track$stopindex[i]] 
+}
+pointsxy <- project(as.matrix(points[,1:2]), projection(pr))  #projection on Tracking-points
+points3d(pointsxy[,1], pointsxy[,2], points[,3]*50)
+
+ptsxy <- project(as.matrix(pts[,1:2]), projection(pr))  #projection on Tracking-points
+points3d(ptsxy[,1], ptsxy[,2], pts[,3]*50, col = "red")
 }
 

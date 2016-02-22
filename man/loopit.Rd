@@ -5,7 +5,7 @@
 \title{Loopit}
 \usage{
 loopit(pts_seeded, romsobject, speed, runtime = 10, looping_time = 0.5,
-  roms_slices = 1, trajectories = FALSE)
+  roms_slices = 1, trajectories)
 }
 \arguments{
 \item{speed}{(w_sink) sinking rate m/days}
@@ -25,18 +25,42 @@ Loops are set to run in half day intervals. If no runtime is defined, the functi
 data(surface_chl)
 data(toyROMS)
 pts_seeded <- create_points_pattern(surface_chl, multi=100)
-h <- toyROMS$h
-all_i_u <- toyROMS$i_u
-all_i_v <- toyROMS$i_v
-all_i_w <- toyROMS$i_w
 
+########## Case 1:
 ## run the tracking for a given sinking speed
-run <- loopit(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 5)
+run <- loopit(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 50)
 
-## check the results
-library(rgl)
-plot3d(pts_seeded, zlim = c(-1500,1))
-plot3d(run$ptrack[,,24], col="red", add=TRUE)
+## testing
+library(rasterVis)
+library(rgdal)
+
+ra <- raster(nrow=50,ncol=50,ext=extent(surface_chl))
+r_roms <- rasterize(x = cbind(as.vector(toyROMS$lon_u), as.vector(toyROMS$lat_u)), y= ra, field = as.vector(-toyROMS$h))
+pr <- projectRaster(r_roms, crs = "+proj=laea +lon_0=137 +lat_0=-66")  #get the right projection (through the centre)
+
+plot3D(pr, adjust = FALSE, zfac = 50)                    # plot bathymetry with 50x exaggerated depth
+pointsxy <- project(as.matrix(run$pend[,1:2]), projection(pr))  #projection on Tracking-points
+points3d(pointsxy[,1],pointsxy[,2],run$pend[,3]*50)#,xlim=xlim,ylim=ylim)
+
+
+########## Case 2:
+## work with trajectories to get a flux (added presences/absences) of particles
+run <- loopit(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 50, trajectories = TRUE)
+
+mat_list <- list()
+for(islices in 1:length(run$idx_list_2D)){
+  mat_list[[islices]] <- matrix(unlist(run$idx_list_2D[[islices]]),ncol=24)
+}
+testmatrix <- do.call(rbind, mat_list)
+testid <- unlist(run$id_list)
+flux_list <- split(testmatrix,testid)
+for(k in 1:nrow(pts_seeded)){
+  ## cells visited by a particle ("presence-only")
+  flux_list[[k]] <- unique(flux_list[[k]])
+  ## drop first and last value (input and setting cell)
+  flux_list[[k]] <- flux_list[[k]][-c(1,length(flux_list[[k]]))]
+} 
+flux <- as.vector(unlist(flux_list))
 
 }
 
