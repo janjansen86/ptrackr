@@ -1,4 +1,6 @@
-#' Trackit 3D
+#' Trackit 2D
+#' 
+#' NOT WORKING YET
 #'
 #' Function to track particles through a ROMS-field.
 #'
@@ -18,39 +20,24 @@
 #' data(surface_chl)
 #' data(toyROMS)
 #' pts <- create_points_pattern(surface_chl, multi=100)
-#' track <- trackit_3D(pts = pts, romsobject = toyROMS)
-#' 
-#' 
-#' 
-#' ## checking the results
-#' # plot(pts)
-#' # points(track$pnow, col = "red")
-#' 
-#' # library(rgl)
-#' # plot3d(pts, zlim = c(-1500,1))
-#' # plot3d(track$pnow, col = "red", add = TRUE)
-#' 
-#' ## better:
-#' library(rasterVis)
-#' library(rgdal)
-#' 
-#' ra <- raster(nrow = 50, ncol = 50, ext = extent(surface_chl))
-#' r_roms <- rasterize(x = cbind(as.vector(toyROMS$lon_u), as.vector(toyROMS$lat_u)), y = ra, field = as.vector(-toyROMS$h))
-#' pr <- projectRaster(r_roms, crs = "+proj=laea +lon_0=137 +lat_0=-66")  #get the right projection (through the centre)
-#' 
-#' plot3D(pr, adjust = FALSE, zfac = 50)                    # plot bathymetry with 50x exaggerated depth
-#' points <- matrix(NA, ncol=3, nrow=dim(track$ptrack)[1])  # get Tracking-points
-#' for(i in seq_len(dim(track$ptrack)[1])){
-#'   points[i,] <- track$ptrack[i,,track$stopindex[i]] 
-#' }
-#' pointsxy <- project(as.matrix(points[,1:2]), projection(pr))  #projection on Tracking-points
-#' points3d(pointsxy[,1], pointsxy[,2], points[,3]*50)
-#' 
-#' ptsxy <- project(as.matrix(pts[,1:2]), projection(pr))  #projection on Tracking-points
-#' points3d(ptsxy[,1], ptsxy[,2], pts[,3]*50, col = "red")
+#' track <- trackit_2D(pts = pts, romsobject = toyROMS)
 
-trackit_3D <- function(pts, romsobject, w_sink=100, time=50){
-
+trackit_2D <- function(pts, romsobject, w_sink=100, time=50){
+  
+  ## from Jenkins & Bombosch (1995)
+  p0 <- 1030             #kg/m^3 seawater density
+  p1 <- 1100             #kg/m^3 Diatom density (so far a quick-look-up-average density from Ierland & Peperzak (1984))
+  cosO <- 1              #its 1 for 90degrees
+  g <- 9.81              #accelaration due to gravity
+  K <- 0.0025            #drag coefficient
+  E <- 1                 #aspect ration of settling flocks (spherical = 1 ??)
+  r <- 0.00016           #particle-radius
+  Wd <- w_sink/24/3600
+  Ucsq <- -(0.05*(p0-p1)*g*2*(1.5*E)^(1/3)*r)/(p0*K)
+  testFunct <- function(U_div,dens) 1800*-(p1*(dens)*Wd*cos(90)*(U_div)*(U_div))/p0
+  
+  roms_ext <- c(min(romsobject$lon_u), max(romsobject$lon_u), min(romsobject$lat_u), max(romsobject$lat_u))
+  
   ## We need an id for each particle to follow individual tracks
   id_vec <- seq_len(nrow(pts))
 
@@ -62,6 +49,7 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50){
   i_v <- romsobject$i_v
   i_w <- romsobject$i_w
   h <- romsobject$h
+  
   ## w_sink is m/days, time is days
   w_sink <- -w_sink/(60*60*24)                               ## sinking speed transformation
   ntime <- time*24*2                                         ## days transformation
@@ -87,22 +75,65 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50){
     ## extract component values from the vars
     thisu <- i_u[dmap$nn.idx]                             ## u-component of ROMS
     thisv <- i_v[dmap$nn.idx]                             ## v-component of ROMS
-    thisw <- i_w[dmap$nn.idx]                             ## w-component of ROMS
-
+    #thisw <- i_w[dmap$nn.idx]                             ## w-component of ROMS
+    thish <- h[dmap$nn.idx]                               ## depth of ROMS-cell
+    
     ## update this time step longitude, latitude, depth
     pnow[,1] <- plast[,1] + (thisu * time_step) / (1.852 * 60 * 1000 * cos(pnow[,2] * pi/180))
     pnow[,2] <- plast[,2] + (thisv * time_step) / (1.852 * 60 * 1000)
-    pnow[,3] <- pmin(0, plast[,3])  + ((thisw + w_sink)* time_step )
-
-    ## hit the bottom
-    stopped <- pnow[,3] <= -h[two_dim_pos$nn.idx]
-    stopindex[stopindex == 0 & stopped] <- itime
+    #pnow[,3] <- pmin(0, plast[,3])  + ((thisw + w_sink)* time_step )
+    
+    ################################
+    ## k returns the cell-index of each point   (find the nearest grid-point from lon_u/lat_u and return its index)
+    tdp_idx <- two_dim_pos$nn.idx
+    
+    ## make sure particles are not travelling upwards
+    #if (depth of pnow) < (depth of plast) then assign plast to pnow with no displacement
+    uphill <- h[tdp_idx] > thish +30
+    
+    pnow[uphill==TRUE,] <- plast[uphill==TRUE,]
+    
+    ## how many particles are there for each cell-index    which(tabulate(k)!=0) selects the same cells as table(k), but keeps their index
+    all_dens <- tabulate(tdp_idx)
+    
+    #score <- as.vector(all_dens)
+    ##########################################
+    ## speed and density for each cell:
+    l <- unique(tdp_idx)  #indices of each "used" cell
+    #speed in active cells, needs to be in squared for equation
+    cell_chars <- data.frame(cbind(l,i_u[l] ^ 2 + i_v[l] ^ 2))
+    #point-density in active cells
+    cell_chars[,3] <- all_dens[l]
+    #get u_div from observed and critical velocity 
+    U_div <- 1-(cell_chars[,2] / Ucsq)
+    ##no erosion:    
+    U_div[U_div<0] <-0
+    ## calculate number of points to settle for each cell (equation from McCave & Swift)
+    cell_chars[,4] <- (testFunct(U_div, cell_chars[,3]))
+    
+    colnames(cell_chars) <- c("cell_index","velocity","n_pts_in_cell","n_pts_to_drop")
+    
+    ## stopping when outside the limits of the area 
+    stopped <- (pnow[,1] >= roms_ext[1] | pnow[,1] <= roms_ext[2] | pnow[,2] >= roms_ext[3] | pnow[,2] <= roms_ext[4])
+    
+    ## forced settling out of the suspension:                      
+    ## create an object to store points to be dropped
+    #drop_pts <- rep(F,length(pnow)/2)                     
+    
+    ## qd: the quick and dirty solution
+    point_chars <- data.frame(cbind(tdp_idx, cell_chars[match(tdp_idx, cell_chars[,1]),3:4]))
+    point_chars[,4] <- point_chars[,3] / point_chars[,2]
+    t_f <- runif(nrow(point_chars)) <= point_chars[,4]
+    stopindex[(stopindex == 0 & stopped) | (stopindex == 0 & t_f)] <- itime
+    ########################
+  
+    ## assign stopping location of points to ptrack 
     ptrack[,,itime] <- pnow
     plast <- pnow
     print(itime)
-    if (all(stopped)) {
+    if (all(stopindex!=0)) {
       message("exiting, all stopped")
-      break;
+      break 
     }
   }
   ptrack <- ptrack[,,seq(itime)]

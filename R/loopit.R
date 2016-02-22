@@ -1,4 +1,6 @@
 #' Loopit
+#' 
+#' Working backup-version for tracking in 3D space (now in loopit_2D3D)
 #'
 #' Loop trackit_3D to follow particles through different consecutive ROMS-sclices. Looping can also increase performance when using very large number of particles by looping through shorter time steps.
 #' Loops are set to run in half day intervals. If no runtime is defined, the function will loop depending on the depth of the deepest cell and the sinking speed to allow each particle to possibly sink to the seafloor (2*max(h)/speed)
@@ -53,7 +55,7 @@
 
 loopit <- function(pts_seeded, romsobject, speed, runtime = 10, looping_time = 0.5, roms_slices = 1, trajectories){
   
-  h <- romsobject$h
+  h <<- romsobject$h
   all_i_u <- romsobject$i_u
   all_i_v <- romsobject$i_v
   all_i_w <- romsobject$i_w
@@ -94,7 +96,7 @@ loopit <- function(pts_seeded, romsobject, speed, runtime = 10, looping_time = 0
     }
     
     ## run the particle-tracking for all floating particles
-    obj <- trackit_3D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time)
+    obj <- loopit_trackit_3D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time)
     
     ## store the particles that stopped (settled)
     lon_list[irun] <- list(obj$ptrack[cbind(seq(nrow(obj$ptrack)), 1, obj$stopindex)])
