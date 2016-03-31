@@ -22,7 +22,7 @@ loopit_trackit_2D <- function(pts, romsobject, w_sink=100, time=50){
   kdxy <- sknn$kdxy
   
   ## its essentially the same as trackit_2D except these lines are commented here:
-    #i_u <- romsobject$i_u
+  #i_u <- romsobject$i_u
   #i_v <- romsobject$i_v
   #i_w <- romsobject$i_w
   #h <- romsobject$h

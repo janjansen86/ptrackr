@@ -20,8 +20,6 @@
 #' pts <- create_points_pattern(surface_chl, multi=100)
 #' track <- trackit_3D(pts = pts, romsobject = toyROMS)
 #' 
-#' 
-#' 
 #' ## checking the results
 #' # plot(pts)
 #' # points(track$pnow, col = "red")
@@ -54,26 +52,33 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50){
   ## We need an id for each particle to follow individual tracks
   id_vec <- seq_len(nrow(pts))
 
+  ## build a kdtree
   sknn <- with(romsobject, setup_knn(lon_u, lat_u, hh))             # (lon_roms=lon_u, lat_roms=lat_u, depth_roms=hh)
   kdtree <- sknn$kdtree
   kdxy <- sknn$kdxy
 
+  ## assign current speeds and depth for each ROMS-cell (lat/lon position)
   i_u <- romsobject$i_u
   i_v <- romsobject$i_v
   i_w <- romsobject$i_w
   h <- romsobject$h
+  
+  ## no boundaries for the particles defined here (compare to trackit_2D)
+  
   ## w_sink is m/days, time is days
-  w_sink <- -w_sink/(60*60*24)                               ## sinking speed transformation
-  ntime <- time*24*2                                         ## days transformation
+  w_sink <- -w_sink/(60*60*24)                               ## sinking speed transformation into m/sec
+  ntime <- time*24*2                                         ## days transformation into 0.5h-intervalls
   time_step <- 30*60                                         ## half hour time steps
+  
+  ## empty objects for the loop
   ptrack <- array(0, c(length(as.vector(pts))/3, 3, ntime))  ## create an empty array to store particle-tracks
   stopped <- rep(FALSE, length(as.vector(pts))/3)            ## create a stopping-vector
   stopindex <- rep(0, length(as.vector(pts))/3)              ## a vector to store indices of when particles stopped
-  ## copies of the starting points for updating in the loop
-  pnow <- plast <- pts
   indices <- vector("list", ntime)                           ## a list of indices to store which 3D-cell a particle is in
-  indices_2D <- vector("list", ntime)                        ## a list of indices to store which 2D-cell a particle is in
-
+  indices_2D <- vector("list", ntime)                        ## a list of indices to store which 2D-cell a particle is in                       
+  
+  pnow <- plast <- pts                ## copies of the starting points for updating in the loop
+  
   for (itime in seq_len(ntime)) {
     ## index 1st nearest neighbour of trace points to grid points
     dmap <- kdtree$query(plast, k = 1, eps = 0)           ## one kdtree
@@ -94,9 +99,15 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50){
     pnow[,2] <- plast[,2] + (thisv * time_step) / (1.852 * 60 * 1000)
     pnow[,3] <- pmin(0, plast[,3])  + ((thisw + w_sink)* time_step )
 
-    ## hit the bottom
+    ##########---- only in trackit_3D:
+    
+    ## stopping conditions (hit the bottom)
     stopped <- pnow[,3] <= -h[two_dim_pos$nn.idx]
     stopindex[stopindex == 0 & stopped] <- itime
+    
+    ##########----
+    
+    ## assign stopping location of points to ptrack
     ptrack[,,itime] <- pnow
     plast <- pnow
     print(itime)

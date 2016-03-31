@@ -19,6 +19,6 @@ loopit_trackit_3D(pts, romsobject, w_sink = 100, time = 50)
 list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices = indices, indices_2D = indices_2D)
 }
 \description{
-Function called by loopit to track particles through a ROMS-field.
+Function called by loopit to track particles through a 3D-ROMS-field.
 }
 

@@ -1,6 +1,6 @@
 #' Loopit 2D/3D
 #' 
-#' NOT WORKING YET FOR 2D
+#' NOT WORKING YET FOR 2D, but 3D works (gives same results as "loopit")
 #'
 #' Function to run the functions loopit_trackit_2D/loopit_trackit_3D to follow particles through different consecutive ROMS-sclices. Looping can also increase performance when using very large number of particles by looping through shorter time steps.
 #' Loops are set to run in half day intervals. If no runtime is defined, the function will loop depending on the depth of the deepest cell and the sinking speed to allow each particle to possibly sink to the seafloor (2*max(h)/speed)
@@ -16,17 +16,16 @@
 #' data(toyROMS)
 #' pts_seeded <- create_points_pattern(surface_chl, multi=100)
 #' 
-#' ########## Case 3:
-#' ## 2D-sedimentation model
-#' run <- loopit_2D3D(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 50, domain = "2D", trajectories = TRUE)
+#' ########## Case 1: 
+#' run <- loopit_2D3D(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 50, domain = "3D", trajectories = TRUE)
 #' 
-#' ########## Case 1:
-#' ## run the tracking for a given sinking speed
+#' ## Not working for the default domain="2D":
 #' run <- loopit_2D3D(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 50)
 #' 
-#' ## testing
+#' ## testing the output (for domain="3D")
 #' library(rasterVis)
 #' library(rgdal)
+#' library(rgl)
 #' ra <- raster(nrow=50,ncol=50,ext=extent(surface_chl))
 #' r_roms <- rasterize(x = cbind(as.vector(toyROMS$lon_u), as.vector(toyROMS$lat_u)), y= ra, field = as.vector(-toyROMS$h))
 #' pr <- projectRaster(r_roms, crs = "+proj=laea +lon_0=137 +lat_0=-66")  #get the right projection (through the centre)
@@ -36,10 +35,11 @@
 #' points3d(pointsxy[,1],pointsxy[,2],run$pend[,3]*50)#,xlim=xlim,ylim=ylim)
 #' 
 #' 
-#' ########## Case 2:
+#' ########## Case 2
 #' ## work with trajectories to get a flux (added presences/absences) of particles
 #' run <- loopit_2D3D(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 50, trajectories = TRUE)
-#' 
+#'  
+#' ## THIS WAS WORKING BEFORE, only run once the functions are fixed:
 #' ## this should be abother function to handle the output
 #' mat_list <- list()
 #' for(islices in 1:length(run$idx_list_2D)){
@@ -56,8 +56,7 @@
 #' } 
 #' flux <- as.vector(unlist(flux_list))
 #' 
-#' 
-#' 
+
 
 loopit_2D3D <- function(pts_seeded, romsobject, speed, runtime = 10, domain = "2D", looping_time = 0.25, roms_slices = 1, trajectories){
   if(domain == "2D"){

@@ -18,6 +18,9 @@ loopit(pts_seeded, romsobject, speed, runtime = 10, looping_time = 0.5,
 list(pts=pts, pend=pend, stopindex=obj$stopindex, ptrack=obj$ptrack, lon_list=lon_list, idx_list=idx_list, idx_list_2D=idx_list_2D, id_list=id_list)
 }
 \description{
+Working backup-version for tracking in 3D space (now in loopit_2D3D)
+}
+\details{
 Loop trackit_3D to follow particles through different consecutive ROMS-sclices. Looping can also increase performance when using very large number of particles by looping through shorter time steps.
 Loops are set to run in half day intervals. If no runtime is defined, the function will loop depending on the depth of the deepest cell and the sinking speed to allow each particle to possibly sink to the seafloor (2*max(h)/speed)
 }

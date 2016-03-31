@@ -4,12 +4,12 @@
 \alias{trackit_2D}
 \title{Trackit 2D}
 \usage{
-trackit_2D(pts, romsobject, w_sink = 100, time = 50)
+trackit_2D(pts, romsobject, w_sink = 100, time = 50, sedimentation)
 }
 \arguments{
 \item{pts}{input points}
 
-\item{w_sink}{sinking rate m/days}
+\item{w_sink}{sinking rate in m/days}
 
 \item{time}{total number of days to run the model}
 
@@ -22,12 +22,13 @@ list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices
 NOT WORKING YET
 }
 \details{
-Function to track particles through a ROMS-field.
+Function to track particles through a ROMS-field in 2D-space.
 
 the function needs an input for speed of the sinking particles (w_sink) and for time
 due to the limitation of RAM available, time is restricted depending on the number of particles
 (too long runs might give an error because the generated vector is too large)
 I found half days work great
+If sedimentation=T, then particles stop in areas with low current speed. default is F
 }
 \examples{
 data(surface_chl)
