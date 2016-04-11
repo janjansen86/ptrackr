@@ -4,7 +4,8 @@
 \alias{loopit_trackit_2D}
 \title{Loopit_Trackit 2D}
 \usage{
-loopit_trackit_2D(pts, romsobject, w_sink = 100, time = 50)
+loopit_trackit_2D(pts, romsobject, w_sink = 100, time = 50,
+  parameters = NULL)
 }
 \arguments{
 \item{pts}{input points}

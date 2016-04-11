@@ -4,7 +4,7 @@
 \alias{trackit_3D}
 \title{Trackit 3D}
 \usage{
-trackit_3D(pts, romsobject, w_sink = 100, time = 50)
+trackit_3D(pts, romsobject, w_sink = 100, time = 50, romsparams)
 }
 \arguments{
 \item{pts}{input points}
@@ -34,8 +34,8 @@ pts <- create_points_pattern(surface_chl, multi=100)
 track <- trackit_3D(pts = pts, romsobject = toyROMS)
 
 ## checking the results
-# plot(pts)
-# points(track$pnow, col = "red")
+plot(pts)
+points(track$pnow, col = "red")
 
 # library(rgl)
 # plot3d(pts, zlim = c(-1500,1))

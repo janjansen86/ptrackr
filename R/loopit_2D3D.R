@@ -1,6 +1,6 @@
 #' Loopit 2D/3D
 #' 
-#' NOT WORKING YET FOR 2D, but 3D works (gives same results as "loopit")
+#' WORKING FINE FOR BOTH 2D AND 3D
 #'
 #' Function to run the functions loopit_trackit_2D/loopit_trackit_3D to follow particles through different consecutive ROMS-sclices. Looping can also increase performance when using very large number of particles by looping through shorter time steps.
 #' Loops are set to run in half day intervals. If no runtime is defined, the function will loop depending on the depth of the deepest cell and the sinking speed to allow each particle to possibly sink to the seafloor (2*max(h)/speed)
@@ -14,13 +14,10 @@
 #' @examples 
 #' data(surface_chl)
 #' data(toyROMS)
+#' 
+#' ########## Case 1:
 #' pts_seeded <- create_points_pattern(surface_chl, multi=100)
-#' 
-#' ########## Case 1: 
 #' run <- loopit_2D3D(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 50, domain = "3D", trajectories = TRUE)
-#' 
-#' ## Not working for the default domain="2D":
-#' run <- loopit_2D3D(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 50)
 #' 
 #' ## testing the output (for domain="3D")
 #' library(rasterVis)
@@ -33,6 +30,20 @@
 #' plot3D(pr, adjust = FALSE, zfac = 50)                    # plot bathymetry with 50x exaggerated depth
 #' pointsxy <- project(as.matrix(run$pend[,1:2]), projection(pr))  #projection on Tracking-points
 #' points3d(pointsxy[,1],pointsxy[,2],run$pend[,3]*50)#,xlim=xlim,ylim=ylim)
+#' 
+#' 
+#' ########## Case 2:
+#' pts_seeded <- create_points_pattern(surface_chl, multi=100)
+#' run <- loopit_2D3D(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 50)
+#' 
+#' plot(pts_seeded)
+#' points(run$pend, col="red", cex=0.6)
+#' points(run$pts , col="blue", cex=0.6)
+#' 
+#' 
+#' 
+#' 
+#' 
 #' 
 #' 
 #' ########## Case 2
@@ -58,22 +69,30 @@
 #' 
 
 
-loopit_2D3D <- function(pts_seeded, romsobject, speed, runtime = 10, domain = "2D", looping_time = 0.25, roms_slices = 1, trajectories){
+loopit_2D3D <- function(pts_seeded, romsobject, speed, runtime = 10, domain = "2D", 
+                        looping_time = 0.25, roms_slices = 1, trajectories = FALSE){
+  params <- NULL
   if(domain == "2D"){
-    ## from Jenkins & Bombosch (1995)
-    p0 <<- 1030             #kg/m^3 seawater density
-    p1 <<- 1100             #kg/m^3 Diatom density (so far a quick-look-up-average density from Ierland & Peperzak (1984))
-    cosO <<- 1              #its 1 for 90degrees
-    g <<- 9.81              #accelaration due to gravity
-    K <<- 0.0025            #drag coefficient
-    E <<- 1                 #aspect ration of settling flocks (spherical = 1 ??)
-    r <<- 0.00016           #particle-radius
-    Wd <<- speed/24/3600
-    Ucsq <<- -(0.05*(p0-p1)*g*2*(1.5*E)^(1/3)*r)/(p0*K)
-    testFunct <<- function(U_div,dens) 1800*-(p1*(dens)*Wd*cos(90)*(U_div)*(U_div))/p0
-  }
+     buildparams(speed)  # loopit_trackit_2D only needs testFunct
+#     params <- list(
+#     ## from Jenkins & Bombosch (1995)
+#     p0 =1030,             #kg/m^3 seawater density
+#     p1 =1100,             #kg/m^3 Diatom density (so far a quick-look-up-average density from Ierland & Peperzak (1984))
+#     cosO =1,              #its 1 for 90degrees
+#     g =9.81,              #accelaration due to gravity
+#     K =0.0025,            #drag coefficient
+#     E =1,                 #aspect ration of settling flocks (spherical = 1 ??)
+#     r =0.00016,           #particle-radius
+#     Wd =speed/24/3600,
+#     Ucsq =-(0.05*(p0-p1)*g*2*(1.5*E)^(1/3)*r)/(p0*K),
+#     testFunct =function(U_div,dens) 1800*-(p1*(dens)*Wd*cos(90)*(U_div)*(U_div))/p0
+#     )
+#     
+    }
+  romsparams <- list()
+  romsparams$h <- romsobject$h
   
-  h <<- romsobject$h
+# h <<- romsobject$h
   all_i_u <- romsobject$i_u
   all_i_v <- romsobject$i_v
   all_i_w <- romsobject$i_w
@@ -105,18 +124,29 @@ loopit_2D3D <- function(pts_seeded, romsobject, speed, runtime = 10, domain = "2
   for(irun in 1:runtime){                             
     
     ## assign current-speed/direction to the cells, this should be done differently
-    i_u <<- all_i_u[,,,curr_vector[irun]]
-    i_v <<- all_i_v[,,,curr_vector[irun]]
-    i_w <<- all_i_w[,,,curr_vector[irun]]
+    romsparams$i_u <- all_i_u[,,,curr_vector[irun]]
+    romsparams$i_v <- all_i_v[,,,curr_vector[irun]]
+    romsparams$i_w <- all_i_w[,,,curr_vector[irun]]
+    
+#     i_u <<- all_i_u[,,,curr_vector[irun]]
+#     i_v <<- all_i_v[,,,curr_vector[irun]]
+#     i_w <<- all_i_w[,,,curr_vector[irun]]
     
     ## save an id for each particle to follow its path
     if(trajectories == TRUE) id_list[[irun]] <- id_vec
     
     ## run the particle-tracking for all floating particles
     if(domain == "3D"){
-      obj <- loopit_trackit_3D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time)
+#       obj <- loopit_trackit_3D(pts = pts, romsobject = romsobject, 
+#                                w_sink = speed, time = looping_time, parameters = params)
+      obj <- trackit_3D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time,
+                        romsparams=romsparams)
+      
     }else{
-      obj <- loopit_trackit_2D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time)
+#       obj <- loopit_trackit_2D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time)
+      obj <- trackit_2D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time,
+                        romsparams=romsparams)
+      
     }
       
     ## store the particles that stopped (settled)
@@ -126,7 +156,7 @@ loopit_2D3D <- function(pts_seeded, romsobject, speed, runtime = 10, domain = "2
     if(domain == "3D")
       depth_list[irun] <- list(obj$ptrack[cbind(seq(nrow(obj$ptrack)), 3, obj$stopindex)])
      
-    if(trajectories == TRUE){
+    if(trajectories){
       ## store the cell-indices of each pts from each time-slice
       idx_list[[irun]] <- obj$indices
       idx_list_2D[[irun]] <- obj$indices_2D
@@ -165,9 +195,9 @@ loopit_2D3D <- function(pts_seeded, romsobject, speed, runtime = 10, domain = "2
   
   ## store the output
   if(trajectories==TRUE){
-    list(pts=pts, pend=pend, stopindex=obj$stopindex, ptrack=obj$ptrack, lon_list=lon_list, idx_list=idx_list, idx_list_2D=idx_list_2D, id_list=id_list)
+    list(pts=pts, pend=pend, pnow=obj$pnow, stopindex=obj$stopindex, ptrack=obj$ptrack, lon_list=lon_list, idx_list=idx_list, idx_list_2D=idx_list_2D, id_list=id_list)
   }else {
-    list(pts=pts, pend=pend, stopindex=obj$stopindex, ptrack=obj$ptrack, lon_list=lon_list)
+    list(pts=pts, pend=pend, pnow=obj$pnow, stopindex=obj$stopindex, ptrack=obj$ptrack, lon_list=lon_list)
   }
 }
 

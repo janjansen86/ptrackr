@@ -21,8 +21,8 @@
 #' track <- trackit_3D(pts = pts, romsobject = toyROMS)
 #' 
 #' ## checking the results
-#' # plot(pts)
-#' # points(track$pnow, col = "red")
+#' plot(pts)
+#' points(track$pnow, col = "red")
 #' 
 #' # library(rgl)
 #' # plot3d(pts, zlim = c(-1500,1))
@@ -47,7 +47,7 @@
 #' ptsxy <- project(as.matrix(pts[,1:2]), projection(pr))  #projection on Tracking-points
 #' points3d(ptsxy[,1], ptsxy[,2], pts[,3]*50, col = "red")
 
-trackit_3D <- function(pts, romsobject, w_sink=100, time=50){
+trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams){
 
   ## We need an id for each particle to follow individual tracks
   id_vec <- seq_len(nrow(pts))
@@ -58,12 +58,24 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50){
   kdxy <- sknn$kdxy
 
   ## assign current speeds and depth for each ROMS-cell (lat/lon position)
-  i_u <- romsobject$i_u
-  i_v <- romsobject$i_v
-  i_w <- romsobject$i_w
-  h <- romsobject$h
+  if(missing(romsparams)){
+    i_u <- romsobject$i_u
+    i_v <- romsobject$i_v
+    i_w <- romsobject$i_w
+    h <- romsobject$h
+  }else{
+    i_u <- romsparams$i_u
+    i_v <- romsparams$i_v
+    i_w <- romsparams$i_w
+    h <- romsparams$h
+  }
+#   i_u <- romsobject$i_u
+#   i_v <- romsobject$i_v
+#   i_w <- romsobject$i_w
+#   h <- romsobject$h
   
-  ## no boundaries for the particles defined here (compare to trackit_2D)
+  ## boundaries of the ROMS-area
+  # roms_ext <- c(min(romsobject$lon_u), max(romsobject$lon_u), min(romsobject$lat_u), max(romsobject$lat_u))
   
   ## w_sink is m/days, time is days
   w_sink <- -w_sink/(60*60*24)                               ## sinking speed transformation into m/sec
@@ -83,7 +95,7 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50){
     ## index 1st nearest neighbour of trace points to grid points
     dmap <- kdtree$query(plast, k = 1, eps = 0)           ## one kdtree
     ## and to 2D space
-    two_dim_pos <- kdxy$query(pnow[,1:2], k = 1, eps = 0)
+    two_dim_pos <- kdxy$query(plast[,1:2], k = 1, eps = 0)
 
     ## store indices for tracing particle positions
     indices[[itime]] <- dmap$nn.idx
@@ -99,6 +111,10 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50){
     pnow[,2] <- plast[,2] + (thisv * time_step) / (1.852 * 60 * 1000)
     pnow[,3] <- pmin(0, plast[,3])  + ((thisw + w_sink)* time_step )
 
+#     stopped <- (pnow[,1] < roms_ext[1] | pnow[,1] > roms_ext[2] |
+#                   pnow[,2] < roms_ext[3] | pnow[,2] > roms_ext[4]
+#                 )
+#     
     ##########---- only in trackit_3D:
     
     ## stopping conditions (hit the bottom)

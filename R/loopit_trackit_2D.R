@@ -10,7 +10,7 @@
 #' @return list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices = indices, indices_2D = indices_2D)
 #' @export
 
-loopit_trackit_2D <- function(pts, romsobject, w_sink=100, time=50){
+loopit_trackit_2D <- function(pts, romsobject, w_sink=100, time=50, parameters = NULL){
   
   roms_ext <- c(min(romsobject$lon_u), max(romsobject$lon_u), min(romsobject$lat_u), max(romsobject$lat_u))
   

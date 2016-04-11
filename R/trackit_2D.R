@@ -1,9 +1,8 @@
 #' Trackit 2D
 #' 
-#' NOT WORKING YET
+#' HAS STILL SOME HICCUPS: THE STOPPING CONDITIONS FOR PARTICLES ONLY WORK GOOD WHEN CALLED FROM "loopit_2D3D"!!!!
 #'
 #' Function to track particles through a ROMS-field in 2D-space. 
-#' 
 #' 
 #' the function needs an input for speed of the sinking particles (w_sink) and for time
 #' due to the limitation of RAM available, time is restricted depending on the number of particles
@@ -15,16 +14,63 @@
 #' @param kdtree kd tree
 #' @param w_sink sinking rate in m/days
 #' @param time total number of days to run the model
+#' @param sedimentation defines stopping conditions for the particles. If TRUE, particles stop depending on their size and on the current speed and number of particles in a cell
+#' @param particle_radius particle radius for the sedimentation, default is set to 0.16mm
+#' @param force_final_settling This can be set to TRUE to force all floating particles at the end of the model-run to settle. This is useful because otherwise a stopindex for those points is not defined
+#' @param romsparams parameters that are filled when this function is called from loopit 
 #'
 #' @return list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices = indices, indices_2D = indices_2D)
 #' @export
 #' @examples 
 #' data(surface_chl)
 #' data(toyROMS)
-#' pts <- create_points_pattern(surface_chl, multi=100)
-#' track <- trackit_2D(pts = pts, romsobject = toyROMS)
+#' pts_seeded <- create_points_pattern(surface_chl, multi=100)
+#' track <- trackit_2D(pts = pts_seeded, romsobject = toyROMS, force_final_settling=TRUE)
+#' 
+#' ## where points end up
+#' plot(track$pnow, col="red", cex=0.6)
+#' points(pts_seeded)
+#' 
+#' ## where points stop
+#' pend <- data.frame(matrix(NA, ncol=2, nrow=nrow(pts_seeded)))
+#' for(irow in 1:nrow(pts_seeded)){
+#'   pend[irow,] <- track$ptrack[irow,1:2,track$stopindex]
+#' }
+#' plot(pend, col="red", cex=0.6)
+#' points(pts_seeded)
+#' 
+#' ## with stronger currents:
+#' toyROMS2 <- toyROMS
+#' toyROMS2$i_u <- toyROMS$i_u*5
+#' toyROMS2$i_v <- toyROMS$i_v*5
+#' track <- trackit_2D(pts = pts_seeded, romsobject = toyROMS2)
+#' plot(pts_seeded)
+#' points(track$pnow, col="red", cex=0.6)
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' ## looking at the results together with roms:
+#' library(rasterVis)
+#' library(rgdal)
+#' library(rgl)
+#' 
+#' ra <- raster(nrow = 50, ncol = 50, ext = extent(surface_chl))
+#' r_roms <- rasterize(x = cbind(as.vector(toyROMS$lon_u), as.vector(toyROMS$lat_u)), y = ra, field = as.vector(-toyROMS$h))
+#' plot(r_roms)
+#' 
+#' ## what the floor-current-speed looks like
+#' ra <- raster(nrow = 50, ncol = 50, ext = extent(surface_chl))
+#' i_uv_roms <- rasterize(x = cbind(as.vector(toyROMS$lon_u), as.vector(toyROMS$lat_u)), y = ra, field = sqrt(as.vector(toyROMS$i_u)^2 + as.vector(toyROMS$i_v)^2))
+#' plot(i_uv_roms)
 
-trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation){
+
+
+
+trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, force_final_settling=FALSE, romsparams, seafloor){
   
   ## We need an id for each particle to be able to follow individual tracks
   id_vec <- seq_len(nrow(pts))
@@ -35,10 +81,17 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation){
   kdxy <- sknn$kdxy
 
   ## assign current speeds and depth for each ROMS-cell (lat/lon position)
-  i_u <- romsobject$i_u
-  i_v <- romsobject$i_v
-  i_w <- romsobject$i_w
-  h <- romsobject$h
+  if(missing(romsparams)){
+    i_u <- romsobject$i_u
+    i_v <- romsobject$i_v
+    i_w <- romsobject$i_w
+    h <- romsobject$h
+  }else{
+    i_u <- romsparams$i_u
+    i_v <- romsparams$i_v
+    i_w <- romsparams$i_w
+    h <- romsparams$h
+  }
   
   ## boundaries of the ROMS-area
   roms_ext <- c(min(romsobject$lon_u), max(romsobject$lon_u), min(romsobject$lat_u), max(romsobject$lat_u))
@@ -57,60 +110,74 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation){
 
   pnow <- plast <- pts                ## copies of the starting points for updating in the loop
   
-  if(missing(sedimentation)){
-    sedimentation=FALSE
-  }else {
-    ## for the stopping conditions of the particles, determine stop or keep floating by this sedimentation process:
-    ## from Jenkins & Bombosch (1995)
-    p0 <- 1030             #kg/m^3 seawater density
-    p1 <- 1100             #kg/m^3 Diatom density (so far a quick-look-up-average density from Ierland & Peperzak (1984))
-    cosO <- 1              #its 1 for 90degrees
-    g <- 9.81              #accelaration due to gravity
-    K <- 0.0025            #drag coefficient
-    E <- 1                 #aspect ration of settling flocks (spherical = 1 ??)
-    r <- 0.00016           #particle-radius
-    Wd <- w_sink/24/3600
-    Ucsq <- -(0.05*(p0-p1)*g*2*(1.5*E)^(1/3)*r)/(p0*K)
-    testFunct <- function(U_div,dens) 1800*-(p1*(dens)*Wd*cos(90)*(U_div)*(U_div))/p0
-  } 
-  
+  ## different to 3D these 2 lines
+  if(sedimentation) 
+    params <- buildparams(w_sink, r=particle_radius)
+    #     ## for the stopping conditions of the particles, determine stop or keep floating by this sedimentation process:
+    #     ## from Jenkins & Bombosch (1995)
+    #     p0 <- 1030             #kg/m^3 seawater density
+    #     p1 <- 1100             #kg/m^3 Diatom density (so far a quick-look-up-average density from Ierland & Peperzak (1984))
+    #     cosO <- 1              #its 1 for 90degrees
+    #     g <- 9.81              #accelaration due to gravity
+    #     K <- 0.0025            #drag coefficient
+    #     E <- 1                 #aspect ration of settling flocks (spherical = 1 ??)
+    #     r <- 0.00016           #particle-radius
+    #     Wd <- w_sink/24/3600
+    #     Ucsq <- -(0.05*(p0-p1)*g*2*(1.5*E)^(1/3)*r)/(p0*K)
+    #     testFunct <- function(U_div,dens) 1800*-(p1*(dens)*Wd*cos(90)*(U_div)*(U_div))/p0
+
   for (itime in seq_len(ntime)) {
+    
+    ## different to trackit_3D in these two lines: find depth for each pnow
+    ## this is not neccessary as the 3D-kdtree already picks the correct cells... why?
+    ## I think 1 is the deepest layer, so if you wanted to track particles 2D in another layer, 
+    ## this would need to be adressed somewhere here
+    #depth_pos <- kdxy$query(pnow[,1:2], k = 1, eps = 0)
+    #pnow[,3] <- h[depth_pos$nn.idx]
+    
     ## index 1st nearest neighbour of trace points to grid points
     dmap <- kdtree$query(plast, k = 1, eps = 0)           ## one kdtree
+    
     ## and to 2D space
-    two_dim_pos <- kdxy$query(pnow[,1:2], k = 1, eps = 0)
-
+    two_dim_pos <- kdxy$query(plast[,1:2], k = 1, eps = 0)
+    
+    ## two_dim_pos returns the cell-index of each point   (find the nearest grid-point from lon_u/lat_u and return its index)
+    tdp_idx <- two_dim_pos$nn.idx
+    ## different to 3D:
+    idx_for_roms <- two_dim_pos$nn.idx
+    #displacement <- dmap$nn.idx
+    
     ## store indices for tracing particle positions
     indices[[itime]] <- dmap$nn.idx
     indices_2D[[itime]] <- two_dim_pos$nn.idx
 
-    ## extract component values from the vars
-    thisu <- i_u[dmap$nn.idx]                             ## u-component of ROMS
-    thisv <- i_v[dmap$nn.idx]                             ## v-component of ROMS
+        ## extract component values from the vars
+    thisu <- i_u[idx_for_roms]                             ## u-component of ROMS
+    thisv <- i_v[idx_for_roms]                             ## v-component of ROMS
     #thisw <- i_w[dmap$nn.idx]                            ## w-component of ROMS
-    thish <- h[dmap$nn.idx]                               ## depth of ROMS-cell
+    thish <- h[idx_for_roms]                               ## depth of ROMS-cell
     
     ## update this time step longitude, latitude, depth
     pnow[,1] <- plast[,1] + (thisu * time_step) / (1.852 * 60 * 1000 * cos(pnow[,2] * pi/180))
     pnow[,2] <- plast[,2] + (thisv * time_step) / (1.852 * 60 * 1000)
+    
+    ## different to 3D this line
     #pnow[,3] <- pmin(0, plast[,3])  + ((thisw + w_sink)* time_step )
     
     ##########---- only in trackit_2D:
-    
-    ## two_dim_pos returns the cell-index of each point   (find the nearest grid-point from lon_u/lat_u and return its index)
-    tdp_idx <- two_dim_pos$nn.idx
-    
+
     ## make sure particles are not travelling upwards to cells more than 30m higher
     #if (depth of pnow) < (depth of plast) then assign plast to pnow with no displacement
-    uphill <- h[tdp_idx] > thish +30
-    
+    uphill <- h[tdp_idx] > thish+10
+
     pnow[uphill==TRUE,] <- plast[uphill==TRUE,]
     
     ## stopping conditions (when outside the limits of the area) 
-    stopped <- (pnow[,1] >= roms_ext[1] | pnow[,1] <= roms_ext[2] | pnow[,2] >= roms_ext[3] | pnow[,2] <= roms_ext[4])
-    
+    stopped <- (pnow[,1] < roms_ext[1] | pnow[,1] > roms_ext[2] |
+                  pnow[,2] < roms_ext[3] | pnow[,2] > roms_ext[4]
+    )
     ## stopping conditions-2 (calculate stopping particles given a sedimentation process):
-    if(sedimentation==T){
+    if(sedimentation){
       ## how many particles are there for each cell-index    which(tabulate(k)!=0) selects the same cells as table(k), but keeps their index
       all_dens <- tabulate(tdp_idx)
       
@@ -121,11 +188,11 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation){
       #point-density in active cells
       cell_chars[,3] <- all_dens[l]
       #get u_div from observed and critical velocity 
-      U_div <- 1-(cell_chars[,2] / Ucsq)
+      U_div <- 1-(cell_chars[,2] / params$Ucsq)
       ##no erosion:    
       U_div[U_div<0] <-0
       ## calculate number of points to settle for each cell (equation from McCave & Swift)
-      cell_chars[,4] <- (testFunct(U_div, cell_chars[,3]))
+      cell_chars[,4] <- (params$testFunct(U_div, cell_chars[,3]))
       
       colnames(cell_chars) <- c("cell_index","velocity","n_pts_in_cell","n_pts_to_drop")
       ## forced settling out of the suspension:                      
@@ -141,7 +208,6 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation){
     }else{
       stopindex[(stopindex == 0 & stopped)] <- itime
     }
-    
     ##########----
   
     ## assign stopping location of points to ptrack 
@@ -154,9 +220,11 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation){
     }
   }
   ptrack <- ptrack[,,seq(itime)]
+  if(force_final_settling){
+    stopindex[stopindex==0] <- itime
+  }
   list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices = indices, indices_2D = indices_2D)
 }
-
 
 
 ####################################

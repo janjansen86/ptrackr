@@ -4,7 +4,9 @@
 \alias{trackit_2D}
 \title{Trackit 2D}
 \usage{
-trackit_2D(pts, romsobject, w_sink = 100, time = 50, sedimentation)
+trackit_2D(pts, romsobject, w_sink = 100, time = 50,
+  sedimentation = FALSE, particle_radius = 0.00016,
+  force_final_settling = FALSE, romsparams, seafloor)
 }
 \arguments{
 \item{pts}{input points}
@@ -13,13 +15,21 @@ trackit_2D(pts, romsobject, w_sink = 100, time = 50, sedimentation)
 
 \item{time}{total number of days to run the model}
 
+\item{sedimentation}{defines stopping conditions for the particles. If TRUE, particles stop depending on their size and on the current speed and number of particles in a cell}
+
+\item{particle_radius}{particle radius for the sedimentation, default is set to 0.16mm}
+
+\item{force_final_settling}{This can be set to TRUE to force all floating particles at the end of the model-run to settle. This is useful because otherwise a stopindex for those points is not defined}
+
+\item{romsparams}{parameters that are filled when this function is called from loopit}
+
 \item{kdtree}{kd tree}
 }
 \value{
 list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices = indices, indices_2D = indices_2D)
 }
 \description{
-NOT WORKING YET
+HAS STILL SOME HICCUPS, PARTICULARLY THE STOPPING CONDITIONS FOR PARTICLES
 }
 \details{
 Function to track particles through a ROMS-field in 2D-space.
@@ -33,7 +43,47 @@ If sedimentation=T, then particles stop in areas with low current speed. default
 \examples{
 data(surface_chl)
 data(toyROMS)
-pts <- create_points_pattern(surface_chl, multi=100)
-track <- trackit_2D(pts = pts, romsobject = toyROMS)
+pts_seeded <- create_points_pattern(surface_chl, multi=100)
+track <- trackit_2D(pts = pts_seeded, romsobject = toyROMS, force_final_settling=TRUE)
+
+## where points end up
+plot(track$pnow, col="red", cex=0.6)
+points(pts_seeded)
+
+## where points stop
+pend <- data.frame(matrix(NA, ncol=2, nrow=nrow(pts_seeded)))
+for(irow in 1:nrow(pts_seeded)){
+  pend[irow,] <- track$ptrack[irow,1:2,track$stopindex]
+}
+plot(pend, col="red", cex=0.6)
+points(pts_seeded)
+
+## with stronger currents:
+toyROMS2 <- toyROMS
+toyROMS2$i_u <- toyROMS$i_u*5
+toyROMS2$i_v <- toyROMS$i_v*5
+track <- trackit_2D(pts = pts_seeded, romsobject = toyROMS2)
+plot(pts_seeded)
+points(track$pnow, col="red", cex=0.6)
+
+
+
+
+
+
+
+## looking at the results together with roms:
+library(rasterVis)
+library(rgdal)
+library(rgl)
+
+ra <- raster(nrow = 50, ncol = 50, ext = extent(surface_chl))
+r_roms <- rasterize(x = cbind(as.vector(toyROMS$lon_u), as.vector(toyROMS$lat_u)), y = ra, field = as.vector(-toyROMS$h))
+plot(r_roms)
+
+## what the floor-current-speed looks like
+ra <- raster(nrow = 50, ncol = 50, ext = extent(surface_chl))
+i_uv_roms <- rasterize(x = cbind(as.vector(toyROMS$lon_u), as.vector(toyROMS$lat_u)), y = ra, field = sqrt(as.vector(toyROMS$i_u)^2 + as.vector(toyROMS$i_v)^2))
+plot(i_uv_roms)
 }
 

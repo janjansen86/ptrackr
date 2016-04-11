@@ -5,7 +5,7 @@
 \title{Loopit 2D/3D}
 \usage{
 loopit_2D3D(pts_seeded, romsobject, speed, runtime = 10, domain = "2D",
-  looping_time = 0.25, roms_slices = 1, trajectories)
+  looping_time = 0.25, roms_slices = 1, trajectories = FALSE)
 }
 \arguments{
 \item{speed}{(w_sink) sinking rate m/days}
@@ -27,13 +27,10 @@ Loops are set to run in half day intervals. If no runtime is defined, the functi
 \examples{
 data(surface_chl)
 data(toyROMS)
+
+########## Case 1:
 pts_seeded <- create_points_pattern(surface_chl, multi=100)
-
-########## Case 1: 
 run <- loopit_2D3D(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 50, domain = "3D", trajectories = TRUE)
-
-## Not working for the default domain="2D":
-run <- loopit_2D3D(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 50)
 
 ## testing the output (for domain="3D")
 library(rasterVis)
@@ -46,6 +43,20 @@ pr <- projectRaster(r_roms, crs = "+proj=laea +lon_0=137 +lat_0=-66")  #get the 
 plot3D(pr, adjust = FALSE, zfac = 50)                    # plot bathymetry with 50x exaggerated depth
 pointsxy <- project(as.matrix(run$pend[,1:2]), projection(pr))  #projection on Tracking-points
 points3d(pointsxy[,1],pointsxy[,2],run$pend[,3]*50)#,xlim=xlim,ylim=ylim)
+
+
+########## Case 2:
+pts_seeded <- create_points_pattern(surface_chl, multi=100)
+run <- loopit_2D3D(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 50)
+
+plot(pts_seeded)
+points(run$pend, col="red", cex=0.6)
+points(run$pts , col="blue", cex=0.6)
+
+
+
+
+
 
 
 ########## Case 2
