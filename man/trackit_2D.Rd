@@ -29,11 +29,9 @@ trackit_2D(pts, romsobject, w_sink = 100, time = 50,
 list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices = indices, indices_2D = indices_2D)
 }
 \description{
-HAS STILL SOME HICCUPS, PARTICULARLY THE STOPPING CONDITIONS FOR PARTICLES
+Function to track particles through a ROMS-field in 2D-space.
 }
 \details{
-Function to track particles through a ROMS-field in 2D-space.
-
 the function needs an input for speed of the sinking particles (w_sink) and for time
 due to the limitation of RAM available, time is restricted depending on the number of particles
 (too long runs might give an error because the generated vector is too large)
@@ -47,8 +45,8 @@ pts_seeded <- create_points_pattern(surface_chl, multi=100)
 track <- trackit_2D(pts = pts_seeded, romsobject = toyROMS, force_final_settling=TRUE)
 
 ## where points end up
-plot(track$pnow, col="red", cex=0.6)
-points(pts_seeded)
+plot(track$pnow, col="red", cex=0.1)
+points(pts_seeded, cex=0.1)
 
 ## where points stop
 pend <- data.frame(matrix(NA, ncol=2, nrow=nrow(pts_seeded)))

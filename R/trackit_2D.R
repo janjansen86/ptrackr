@@ -1,7 +1,5 @@
 #' Trackit 2D
 #' 
-#' HAS STILL SOME HICCUPS: THE STOPPING CONDITIONS FOR PARTICLES ONLY WORK GOOD WHEN CALLED FROM "loopit_2D3D"!!!!
-#'
 #' Function to track particles through a ROMS-field in 2D-space. 
 #' 
 #' the function needs an input for speed of the sinking particles (w_sink) and for time
@@ -28,8 +26,8 @@
 #' track <- trackit_2D(pts = pts_seeded, romsobject = toyROMS, force_final_settling=TRUE)
 #' 
 #' ## where points end up
-#' plot(track$pnow, col="red", cex=0.6)
-#' points(pts_seeded)
+#' plot(track$pnow, col="red", cex=0.1)
+#' points(pts_seeded, cex=0.1)
 #' 
 #' ## where points stop
 #' pend <- data.frame(matrix(NA, ncol=2, nrow=nrow(pts_seeded)))
@@ -110,9 +108,8 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
 
   pnow <- plast <- pts                ## copies of the starting points for updating in the loop
   
-  ## different to 3D these 2 lines
-  if(sedimentation) 
-    params <- buildparams(w_sink, r=particle_radius)
+  ## different to 3D this line
+  if(sedimentation) params <- buildparams(w_sink, r=particle_radius)
     #     ## for the stopping conditions of the particles, determine stop or keep floating by this sedimentation process:
     #     ## from Jenkins & Bombosch (1995)
     #     p0 <- 1030             #kg/m^3 seawater density
@@ -125,7 +122,8 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
     #     Wd <- w_sink/24/3600
     #     Ucsq <- -(0.05*(p0-p1)*g*2*(1.5*E)^(1/3)*r)/(p0*K)
     #     testFunct <- function(U_div,dens) 1800*-(p1*(dens)*Wd*cos(90)*(U_div)*(U_div))/p0
-
+  
+  
   for (itime in seq_len(ntime)) {
     
     ## different to trackit_3D in these two lines: find depth for each pnow
@@ -151,7 +149,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
     indices[[itime]] <- dmap$nn.idx
     indices_2D[[itime]] <- two_dim_pos$nn.idx
 
-        ## extract component values from the vars
+    ## extract component values from the vars
     thisu <- i_u[idx_for_roms]                             ## u-component of ROMS
     thisv <- i_v[idx_for_roms]                             ## v-component of ROMS
     #thisw <- i_w[dmap$nn.idx]                            ## w-component of ROMS
@@ -189,10 +187,10 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
       cell_chars[,3] <- all_dens[l]
       #get u_div from observed and critical velocity 
       U_div <- 1-(cell_chars[,2] / params$Ucsq)
-      ##no erosion:    
+       ##no erosion:    
       U_div[U_div<0] <-0
       ## calculate number of points to settle for each cell (equation from McCave & Swift)
-      cell_chars[,4] <- (params$testFunct(U_div, cell_chars[,3]))
+      cell_chars[,4] <- params$testFunct(U_div, cell_chars[,3])
       
       colnames(cell_chars) <- c("cell_index","velocity","n_pts_in_cell","n_pts_to_drop")
       ## forced settling out of the suspension:                      
@@ -201,7 +199,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
     
       ## qd: the quick and dirty solution
       point_chars <- data.frame(cbind(tdp_idx, cell_chars[match(tdp_idx, cell_chars[,1]),3:4]))
-      point_chars[,4] <- point_chars[,3] / point_chars[,2]
+      point_chars[,4] <- -(point_chars[,3] / point_chars[,2])
       t_f <- runif(nrow(point_chars)) <= point_chars[,4]
 
       stopindex[(stopindex == 0 & stopped) | (stopindex == 0 & t_f)] <- itime

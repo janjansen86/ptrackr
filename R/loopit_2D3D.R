@@ -5,9 +5,17 @@
 #' Function to run the functions loopit_trackit_2D/loopit_trackit_3D to follow particles through different consecutive ROMS-sclices. Looping can also increase performance when using very large number of particles by looping through shorter time steps.
 #' Loops are set to run in half day intervals. If no runtime is defined, the function will loop depending on the depth of the deepest cell and the sinking speed to allow each particle to possibly sink to the seafloor (2*max(h)/speed)
 #'
+#' @param pts_seeded matrix of particles with 3 colums (lon, lat, depth) 
+#' @param romsobject list of matrices containing ROMS-model cell-values (lon_u, lat_u, h, i_u, i_v, i_w)
+#' @param roms_slices number of time-frames to use in the particle-tracking
+#' @param start_slice determines which roms_slice the particle-tracking starts with
+#' @param domain either 2D or 3D
+#' @param trajectories TRUE/FALSE statement to define whether to store particle trajectories (model runs much faster without storing trajectories). Default is FALSE.
 #' @param speed (w_sink) sinking rate m/days
 #' @param runtime (time) total number fo days to run the model
-#' @param trajectories TRUE/FALSE statement to define whether to store particle trajectories (model runs much faster without storing trajectories). Default is FALSE.
+#' @param looping_time default at 0.25 which is equal to the 6h intervall of the ROMS-model
+#' @param sedimentation TRUE/FALSE with default as FALSE, should particles settle on the seafloor depending on current speed and particle density (McCave & Swift 1976)
+#' @param particle_radius radius of the particles, this influences the sedimentation rate with smaller values meaning less sedimentation
 #' 
 #' @return list(pts=pts, pend=pend, stopindex=obj$stopindex, ptrack=obj$ptrack, lon_list=lon_list, idx_list=idx_list, idx_list_2D=idx_list_2D, id_list=id_list)
 #' @export
@@ -15,11 +23,11 @@
 #' data(surface_chl)
 #' data(toyROMS)
 #' 
-#' ########## Case 1:
+#' ########## 3D-tracking:
 #' pts_seeded <- create_points_pattern(surface_chl, multi=100)
-#' run <- loopit_2D3D(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 50, domain = "3D", trajectories = TRUE)
+#' run <- loopit_2D3D(pts_seeded = pts_seeded, romsobject = toyROMS, roms_slices = 4, speed = 100, runtime = 50, domain = "3D", trajectories = TRUE)
 #' 
-#' ## testing the output (for domain="3D")
+#' ## testing the output
 #' library(rasterVis)
 #' library(rgdal)
 #' library(rgl)
@@ -32,34 +40,33 @@
 #' points3d(pointsxy[,1],pointsxy[,2],run$pend[,3]*50)#,xlim=xlim,ylim=ylim)
 #' 
 #' 
-#' ########## Case 2:
+#' ########## 2D-tracking:
 #' pts_seeded <- create_points_pattern(surface_chl, multi=100)
-#' run <- loopit_2D3D(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 50)
+#' run <- loopit_2D3D(pts_seeded = pts_seeded, roms_slices = 4, romsobject = toyROMS, speed = 100, runtime = 50, sedimentation = TRUE)
 #' 
 #' plot(pts_seeded)
 #' points(run$pend, col="red", cex=0.6)
 #' points(run$pts , col="blue", cex=0.6)
 #' 
-#' 
-#' 
-#' 
-#' 
-#' 
-#' 
-#' ########## Case 2
-#' ## work with trajectories to get a flux (added presences/absences) of particles
-#' run <- loopit_2D3D(pts_seeded = pts_seeded, romsobject = toyROMS, speed = 100, runtime = 50, trajectories = TRUE)
 #'  
-#' ## THIS WAS WORKING BEFORE, only run once the functions are fixed:
-#' ## this should be abother function to handle the output
+#' ########## 2D-tracking with storing trajectories:
+#' pts_seeded <- create_points_pattern(surface_chl, multi=100)
+#' run <- loopit_2D3D(pts_seeded = pts_seeded, roms_slices = 4, particle_radius = 0.00001, romsobject = toyROMS, speed = 100, runtime = 50, sedimentation = TRUE, trajectories = TRUE)
+#' 
+#' plot(pts_seeded)
+#' points(run$pend, col="red", cex=0.6)
+#' points(run$pts , col="blue", cex=0.6)
+#' 
+#' ## looking at the horizontal flux: this should be abother function to handle the output
+#' ra <- raster(nrow=50,ncol=50,ext=extent(surface_chl))
 #' mat_list <- list()
 #' for(islices in 1:length(run$idx_list_2D)){
-#'   mat_list[[islices]] <- matrix(unlist(run$idx_list_2D[[islices]]),ncol=24)
+#'   mat_list[[islices]] <- matrix(unlist(run$idx_list_2D[[islices]]),ncol=12)
 #' }
 #' testmatrix <- do.call(rbind, mat_list)
 #' testid <- unlist(run$id_list)
 #' flux_list <- split(testmatrix,testid)
-#' for(k in 1:nrow(pts_seeded)){
+#' for(k in 1:length(flux_list)){
 #'   ## cells visited by a particle ("presence-only")
 #'   flux_list[[k]] <- unique(flux_list[[k]])
 #'   ## drop first and last value (input and setting cell)
@@ -67,10 +74,26 @@
 #' } 
 #' flux <- as.vector(unlist(flux_list))
 #' 
+#' library(ggplot2)
+#' xlim <- c(xmin(ra),xmax(ra))
+#' ylim <- c(ymin(ra),ymax(ra))
+#' df <- data.frame(cbind(toyROMS$lon_u[flux],toyROMS$lat_u[flux]))
+#' p1 <- ggplot(df,aes(x=df[,1],y=df[,2])) + 
+#'   ggtitle("particle distribution") +
+#'  geom_bin2d(binwidth = c(xres(ra),yres(ra))) + 
+#'  scale_x_continuous(limits = xlim) +
+#'  scale_y_continuous(limits = ylim)
+#' p1_props <- ggplot_build(p1)$data[[1]]
+#' p1_props$x<-with(p1_props,(xmin+xmax)/2)
+#' p1_props$y<-with(p1_props,(ymin+ymax)/2)
+#' FluxCts  <- p1_props[,c(5,6,4)]
+#' m2_FluxCts <- na.omit(FluxCts)
+#' flux_ra <- rasterize(m2_FluxCts[,1:2],ra, field=m2_FluxCts[,3])
+#' plot(flux_ra)
 
 
-loopit_2D3D <- function(pts_seeded, romsobject, speed, runtime = 10, domain = "2D", 
-                        looping_time = 0.25, roms_slices = 1, trajectories = FALSE){
+loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1, domain = "2D", trajectories = FALSE,
+                        speed, runtime = 10, looping_time = 0.25, sedimentation=FALSE, particle_radius=0.00016){
   params <- NULL
   if(domain == "2D"){
      buildparams(speed)  # loopit_trackit_2D only needs testFunct
@@ -118,22 +141,21 @@ loopit_2D3D <- function(pts_seeded, romsobject, speed, runtime = 10, domain = "2
     runtime <- ceiling(max(h)/speed)                  ## no runtime defined
   } else runtime <- runtime                           ## runtime defined
   curr_vector <- rep(1:roms_slices,runtime)
+  ## allow for different starting ROMS-slices (re-arrange the vector)
+  sliced_vector <- curr_vector[c(start_slice:length(curr_vector),1:(start_slice-1))]
+  
   runtime <- roms_slices*runtime                                ## counting full days
   
   ## loop over different time-slices
   for(irun in 1:runtime){                             
     
-    ## assign current-speed/direction to the cells, this should be done differently
-    romsparams$i_u <- all_i_u[,,,curr_vector[irun]]
-    romsparams$i_v <- all_i_v[,,,curr_vector[irun]]
-    romsparams$i_w <- all_i_w[,,,curr_vector[irun]]
-    
-#     i_u <<- all_i_u[,,,curr_vector[irun]]
-#     i_v <<- all_i_v[,,,curr_vector[irun]]
-#     i_w <<- all_i_w[,,,curr_vector[irun]]
+    ## assign current-speed/direction to the cells
+    romsparams$i_u <- all_i_u[,,,sliced_vector[irun]]
+    romsparams$i_v <- all_i_v[,,,sliced_vector[irun]]
+    romsparams$i_w <- all_i_w[,,,sliced_vector[irun]]
     
     ## save an id for each particle to follow its path
-    if(trajectories == TRUE) id_list[[irun]] <- id_vec
+    if(trajectories) id_list[[irun]] <- id_vec
     
     ## run the particle-tracking for all floating particles
     if(domain == "3D"){
@@ -145,7 +167,7 @@ loopit_2D3D <- function(pts_seeded, romsobject, speed, runtime = 10, domain = "2
     }else{
 #       obj <- loopit_trackit_2D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time)
       obj <- trackit_2D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time,
-                        romsparams=romsparams)
+                        romsparams=romsparams, sedimentation=sedimentation, particle_radius = particle_radius)
       
     }
       
