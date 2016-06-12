@@ -4,7 +4,8 @@
 \alias{trackit_3D}
 \title{Trackit 3D}
 \usage{
-trackit_3D(pts, romsobject, w_sink = 100, time = 50, romsparams)
+trackit_3D(pts, romsobject, w_sink = 100, time = 50, romsparams,
+  loop_trackit = FALSE)
 }
 \arguments{
 \item{pts}{input points}
@@ -12,6 +13,8 @@ trackit_3D(pts, romsobject, w_sink = 100, time = 50, romsparams)
 \item{w_sink}{sinking rate m/days}
 
 \item{time}{total number of days to run the model}
+
+\item{loop_trackit}{Default is FALSE, automatically turns TRUE when called from loopit_2D3D}
 
 \item{kdtree}{kd tree}
 }

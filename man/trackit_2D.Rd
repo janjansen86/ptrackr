@@ -6,7 +6,7 @@
 \usage{
 trackit_2D(pts, romsobject, w_sink = 100, time = 50,
   sedimentation = FALSE, particle_radius = 0.00016,
-  force_final_settling = FALSE, romsparams, seafloor)
+  force_final_settling = FALSE, romsparams, seafloor, loop_trackit = FALSE)
 }
 \arguments{
 \item{pts}{input points}

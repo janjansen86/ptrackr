@@ -68,15 +68,20 @@
 
 
 
-trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, force_final_settling=FALSE, romsparams, seafloor){
+trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, force_final_settling=FALSE, romsparams, seafloor, loop_trackit=FALSE){
   
   ## We need an id for each particle to be able to follow individual tracks
   id_vec <- seq_len(nrow(pts))
 
   ## build a kdtree
-  sknn <- with(romsobject, setup_knn(lon_u, lat_u, hh))             # (lon_roms=lon_u, lat_roms=lat_u, depth_roms=hh)
-  kdtree <- sknn$kdtree
-  kdxy <- sknn$kdxy
+  if(loop_trackit==TRUE){
+    kdtree <- romsobject$kdtree
+    kdxy <- romsobject$kdxy
+  }else{
+    sknn <- with(romsobject, setup_knn(lon_u, lat_u, hh))             # (lon_roms=lon_u, lat_roms=lat_u, depth_roms=hh)
+    kdtree <- sknn$kdtree
+    kdxy <- sknn$kdxy
+  }
 
   ## assign current speeds and depth for each ROMS-cell (lat/lon position)
   if(missing(romsparams)){

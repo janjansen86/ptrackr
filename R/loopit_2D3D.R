@@ -94,8 +94,8 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
 
   ## setup kdtree
   sknn <- with(romsobject, setup_knn(lon_u, lat_u, hh))             # (lon_roms=lon_u, lat_roms=lat_u, depth_roms=hh)
-  kdtree <- sknn$kdtree
-  kdxy <- sknn$kdxy
+  romsobject$kdtree <- sknn$kdtree
+  romsobject$kdxy <- sknn$kdxy
   
   params <- NULL
   if(domain == "2D"){
@@ -141,7 +141,7 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
   sliced_vector <- curr_vector[c(start_slice:length(curr_vector),1:(start_slice-1))]
   
   runtime <- roms_slices*runtime                                ## counting full days
-  
+
   ## loop over different time-slices
   for(irun in 1:runtime){                             
     
@@ -152,7 +152,7 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
     
     ## save an id for each particle to follow its path
     if(trajectories) id_list[[irun]] <- id_vec
-    
+
     ## run the particle-tracking for all floating particles
     if(domain == "3D"){
 #       obj <- loopit_trackit_3D(pts = pts, romsobject = romsobject, 

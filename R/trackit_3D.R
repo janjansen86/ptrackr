@@ -54,7 +54,7 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams, loop_tr
   id_vec <- seq_len(nrow(pts))
 
   ## build a kdtree
-  if(loop_trackit=TRUE){
+  if(loop_trackit==TRUE){
     kdtree <- romsobject$kdtree
     kdxy <- romsobject$kdxy
   }else{
@@ -87,7 +87,7 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams, loop_tr
   w_sink <- -w_sink/(60*60*24)                               ## sinking speed transformation into m/sec
   ntime <- time*24*2                                         ## days transformation into 0.5h-intervalls
   time_step <- 30*60                                         ## half hour time steps
-  
+
   ## empty objects for the loop
   ptrack <- array(0, c(length(as.vector(pts))/3, 3, ntime))  ## create an empty array to store particle-tracks
   stopped <- rep(FALSE, length(as.vector(pts))/3)            ## create a stopping-vector
@@ -96,7 +96,7 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams, loop_tr
   indices_2D <- vector("list", ntime)                        ## a list of indices to store which 2D-cell a particle is in                       
   
   pnow <- plast <- pts                ## copies of the starting points for updating in the loop
-  
+
   for (itime in seq_len(ntime)) {
     ## index 1st nearest neighbour of trace points to grid points
     dmap <- kdtree$query(plast, k = 1, eps = 0)           ## one kdtree
