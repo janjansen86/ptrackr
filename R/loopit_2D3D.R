@@ -74,26 +74,29 @@
 #' } 
 #' flux <- as.vector(unlist(flux_list))
 #' 
-#' library(ggplot2)
 #' xlim <- c(xmin(ra),xmax(ra))
 #' ylim <- c(ymin(ra),ymax(ra))
 #' df <- data.frame(cbind(toyROMS$lon_u[flux],toyROMS$lat_u[flux]))
-#' p1 <- ggplot(df,aes(x=df[,1],y=df[,2])) + 
-#'   ggtitle("particle distribution") +
-#'  geom_bin2d(binwidth = c(xres(ra),yres(ra))) + 
-#'  scale_x_continuous(limits = xlim) +
-#'  scale_y_continuous(limits = ylim)
-#' p1_props <- ggplot_build(p1)$data[[1]]
-#' p1_props$x<-with(p1_props,(xmin+xmax)/2)
-#' p1_props$y<-with(p1_props,(ymin+ymax)/2)
-#' FluxCts  <- p1_props[,c(5,6,4)]
-#' m2_FluxCts <- na.omit(FluxCts)
-#' flux_ra <- rasterize(m2_FluxCts[,1:2],ra, field=m2_FluxCts[,3])
-#' plot(flux_ra)
+#' df$cell <- cellFromXY(ra, df)
+#' ra[] <- tabulate(df$cell, ncell(ra))
+#' plot(ra)
 
 
 loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1, domain = "2D", trajectories = FALSE,
                         speed, runtime = 10, looping_time = 0.25, sedimentation=FALSE, particle_radius=0.00016){
+  pts <- pts_seeded
+  loop_length <- looping_time*24*2
+  
+  # h <<- romsobject$h
+  all_i_u <- romsobject$i_u
+  all_i_v <- romsobject$i_v
+  all_i_w <- romsobject$i_w
+
+  ## setup kdtree
+  sknn <- with(romsobject, setup_knn(lon_u, lat_u, hh))             # (lon_roms=lon_u, lat_roms=lat_u, depth_roms=hh)
+  kdtree <- sknn$kdtree
+  kdxy <- sknn$kdxy
+  
   params <- NULL
   if(domain == "2D"){
      buildparams(speed)  # loopit_trackit_2D only needs testFunct
@@ -114,13 +117,6 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
     }
   romsparams <- list()
   romsparams$h <- romsobject$h
-  
-# h <<- romsobject$h
-  all_i_u <- romsobject$i_u
-  all_i_v <- romsobject$i_v
-  all_i_w <- romsobject$i_w
-  pts <- pts_seeded
-  loop_length <- looping_time*24*2
   
   ## create lists to store all particles that settled at the end of each tracking-loop
   lon_list <- list()
@@ -161,13 +157,13 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
     if(domain == "3D"){
 #       obj <- loopit_trackit_3D(pts = pts, romsobject = romsobject, 
 #                                w_sink = speed, time = looping_time, parameters = params)
-      obj <- trackit_3D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time,
-                        romsparams=romsparams)
+      obj <- trackit_3D(pts=pts, romsobject=romsobject, w_sink=speed, time=looping_time,
+                        romsparams=romsparams, loop_trackit=TRUE)
       
     }else{
 #       obj <- loopit_trackit_2D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time)
-      obj <- trackit_2D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time,
-                        romsparams=romsparams, sedimentation=sedimentation, particle_radius = particle_radius)
+      obj <- trackit_2D(pts=pts, romsobject=romsobject, w_sink=speed, time=looping_time,
+                        romsparams=romsparams, sedimentation=sedimentation, particle_radius=particle_radius, , loop_trackit=TRUE)
       
     }
       

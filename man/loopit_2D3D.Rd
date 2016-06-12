@@ -96,21 +96,11 @@ for(k in 1:length(flux_list)){
 } 
 flux <- as.vector(unlist(flux_list))
 
-library(ggplot2)
 xlim <- c(xmin(ra),xmax(ra))
 ylim <- c(ymin(ra),ymax(ra))
 df <- data.frame(cbind(toyROMS$lon_u[flux],toyROMS$lat_u[flux]))
-p1 <- ggplot(df,aes(x=df[,1],y=df[,2])) + 
-  ggtitle("particle distribution") +
- geom_bin2d(binwidth = c(xres(ra),yres(ra))) + 
- scale_x_continuous(limits = xlim) +
- scale_y_continuous(limits = ylim)
-p1_props <- ggplot_build(p1)$data[[1]]
-p1_props$x<-with(p1_props,(xmin+xmax)/2)
-p1_props$y<-with(p1_props,(ymin+ymax)/2)
-FluxCts  <- p1_props[,c(5,6,4)]
-m2_FluxCts <- na.omit(FluxCts)
-flux_ra <- rasterize(m2_FluxCts[,1:2],ra, field=m2_FluxCts[,3])
-plot(flux_ra)
+df$cell <- cellFromXY(ra, df)
+ra[] <- tabulate(df$cell, ncell(ra))
+plot(ra)
 }
 

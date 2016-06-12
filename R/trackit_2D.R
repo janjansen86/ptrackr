@@ -217,7 +217,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
       break 
     }
   }
-  ptrack <- ptrack[,,seq(itime)]
+  ptrack <- ptrack[,,seq(itime),drop=FALSE]
   if(force_final_settling){
     stopindex[stopindex==0] <- itime
   }

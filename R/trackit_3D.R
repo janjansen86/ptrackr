@@ -11,6 +11,7 @@
 #' @param kdtree kd tree
 #' @param w_sink sinking rate m/days
 #' @param time total number of days to run the model
+#' @param loop_trackit Default is FALSE, automatically turns TRUE when called from loopit_2D3D
 #'
 #' @return list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices = indices, indices_2D = indices_2D)
 #' @export
@@ -47,15 +48,20 @@
 #' ptsxy <- project(as.matrix(pts[,1:2]), projection(pr))  #projection on Tracking-points
 #' points3d(ptsxy[,1], ptsxy[,2], pts[,3]*50, col = "red")
 
-trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams){
+trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams, loop_trackit=FALSE){
 
   ## We need an id for each particle to follow individual tracks
   id_vec <- seq_len(nrow(pts))
 
   ## build a kdtree
-  sknn <- with(romsobject, setup_knn(lon_u, lat_u, hh))             # (lon_roms=lon_u, lat_roms=lat_u, depth_roms=hh)
-  kdtree <- sknn$kdtree
-  kdxy <- sknn$kdxy
+  if(loop_trackit=TRUE){
+    kdtree <- romsobject$kdtree
+    kdxy <- romsobject$kdxy
+  }else{
+    sknn <- with(romsobject, setup_knn(lon_u, lat_u, hh))             # (lon_roms=lon_u, lat_roms=lat_u, depth_roms=hh)
+    kdtree <- sknn$kdtree
+    kdxy <- sknn$kdxy
+  }
 
   ## assign current speeds and depth for each ROMS-cell (lat/lon position)
   if(missing(romsparams)){
@@ -132,7 +138,7 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams){
       break;
     }
   }
-  ptrack <- ptrack[,,seq(itime)]
+  ptrack <- ptrack[,,seq(itime),drop=FALSE]
   list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices = indices, indices_2D = indices_2D)
 }
 
