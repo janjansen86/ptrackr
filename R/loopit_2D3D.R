@@ -141,14 +141,21 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
   sliced_vector <- curr_vector[c(start_slice:length(curr_vector),1:(start_slice-1))]
   
   runtime <- roms_slices*runtime                                ## counting full days
+  
+  ## assign current-speed/direction to the cells
+  romsparams$i_u <- all_i_u
+  romsparams$i_v <- all_i_v
+  romsparams$i_w <- all_i_w
 
   ## loop over different time-slices
   for(irun in 1:runtime){                             
     
-    ## assign current-speed/direction to the cells
-    romsparams$i_u <- all_i_u[,,,sliced_vector[irun]]
-    romsparams$i_v <- all_i_v[,,,sliced_vector[irun]]
-    romsparams$i_w <- all_i_w[,,,sliced_vector[irun]]
+    ## re-assign current-speed/direction to the cells for mulitple slices
+    if(roms_slices>1){
+      romsparams$i_u <- all_i_u[,,,sliced_vector[irun]]
+      romsparams$i_v <- all_i_v[,,,sliced_vector[irun]]
+      romsparams$i_w <- all_i_w[,,,sliced_vector[irun]]
+    }
     
     ## save an id for each particle to follow its path
     if(trajectories) id_list[[irun]] <- id_vec
