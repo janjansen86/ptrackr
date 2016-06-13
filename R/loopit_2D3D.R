@@ -83,7 +83,7 @@
 
 
 loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1, domain = "2D", trajectories = FALSE,
-                        speed, runtime = 10, looping_time = 0.25, sedimentation=FALSE, particle_radius=0.00016){
+                        speed, runtime = 10, looping_time = 0.25, sedimentation=FALSE, particle_radius=0.00016, time_steps_in_s=1800){
   pts <- pts_seeded
   loop_length <- looping_time*24*2
   
@@ -96,28 +96,7 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
   sknn <- with(romsobject, setup_knn(lon_u, lat_u, hh))             # (lon_roms=lon_u, lat_roms=lat_u, depth_roms=hh)
   romsobject$kdtree <- sknn$kdtree
   romsobject$kdxy <- sknn$kdxy
-  
-  params <- NULL
-  if(domain == "2D"){
-     buildparams(speed)  # loopit_trackit_2D only needs testFunct
-#     params <- list(
-#     ## from Jenkins & Bombosch (1995)
-#     p0 =1030,             #kg/m^3 seawater density
-#     p1 =1100,             #kg/m^3 Diatom density (so far a quick-look-up-average density from Ierland & Peperzak (1984))
-#     cosO =1,              #its 1 for 90degrees
-#     g =9.81,              #accelaration due to gravity
-#     K =0.0025,            #drag coefficient
-#     E =1,                 #aspect ration of settling flocks (spherical = 1 ??)
-#     r =0.00016,           #particle-radius
-#     Wd =speed/24/3600,
-#     Ucsq =-(0.05*(p0-p1)*g*2*(1.5*E)^(1/3)*r)/(p0*K),
-#     testFunct =function(U_div,dens) 1800*-(p1*(dens)*Wd*cos(90)*(U_div)*(U_div))/p0
-#     )
-#     
-    }
-  romsparams <- list()
-  romsparams$h <- romsobject$h
-  
+ 
   ## create lists to store all particles that settled at the end of each tracking-loop
   lon_list <- list()
   lat_list <- list()
@@ -140,13 +119,34 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
   ## allow for different starting ROMS-slices (re-arrange the vector)
   sliced_vector <- curr_vector[c(start_slice:length(curr_vector),1:(start_slice-1))]
   
-  runtime <- roms_slices*runtime                                ## counting full days
+  params <- NULL
+  if(domain == "2D"){
+     buildparams(speed)  # loopit_trackit_2D only needs testFunct
+#     params <- list(
+#     ## from Jenkins & Bombosch (1995)
+#     p0 =1030,             #kg/m^3 seawater density
+#     p1 =1100,             #kg/m^3 Diatom density (so far a quick-look-up-average density from Ierland & Peperzak (1984))
+#     cosO =1,              #its 1 for 90degrees
+#     g =9.81,              #accelaration due to gravity
+#     K =0.0025,            #drag coefficient
+#     E =1,                 #aspect ration of settling flocks (spherical = 1 ??)
+#     r =0.00016,           #particle-radius
+#     Wd =speed/24/3600,
+#     Ucsq =-(0.05*(p0-p1)*g*2*(1.5*E)^(1/3)*r)/(p0*K),
+#     testFunct =function(U_div,dens) 1800*-(p1*(dens)*Wd*cos(90)*(U_div)*(U_div))/p0
+#     )
+#     
+    }
+  romsparams <- list()
+  romsparams$h <- romsobject$h
   
   ## assign current-speed/direction to the cells
   romsparams$i_u <- all_i_u
   romsparams$i_v <- all_i_v
   romsparams$i_w <- all_i_w
 
+  runtime <- roms_slices*runtime                                ## counting full days
+  
   ## loop over different time-slices
   for(irun in 1:runtime){                             
     
@@ -165,12 +165,12 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
 #       obj <- loopit_trackit_3D(pts = pts, romsobject = romsobject, 
 #                                w_sink = speed, time = looping_time, parameters = params)
       obj <- trackit_3D(pts=pts, romsobject=romsobject, w_sink=speed, time=looping_time,
-                        romsparams=romsparams, loop_trackit=TRUE)
+                        romsparams=romsparams, loop_trackit=TRUE, time_steps_in_s=time_steps_in_s)
       
     }else{
 #       obj <- loopit_trackit_2D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time)
       obj <- trackit_2D(pts=pts, romsobject=romsobject, w_sink=speed, time=looping_time,
-                        romsparams=romsparams, sedimentation=sedimentation, particle_radius=particle_radius, , loop_trackit=TRUE)
+                        romsparams=romsparams, sedimentation=sedimentation, particle_radius=particle_radius, loop_trackit=TRUE, time_steps_in_s=time_steps_in_s)
       
     }
       

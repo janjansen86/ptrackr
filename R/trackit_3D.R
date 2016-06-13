@@ -48,7 +48,7 @@
 #' ptsxy <- project(as.matrix(pts[,1:2]), projection(pr))  #projection on Tracking-points
 #' points3d(ptsxy[,1], ptsxy[,2], pts[,3]*50, col = "red")
 
-trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams, loop_trackit=FALSE){
+trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams, loop_trackit=FALSE, time_steps_in_s=1800){
 
   ## We need an id for each particle to follow individual tracks
   id_vec <- seq_len(nrow(pts))
@@ -85,8 +85,7 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams, loop_tr
   
   ## w_sink is m/days, time is days
   w_sink <- -w_sink/(60*60*24)                               ## sinking speed transformation into m/sec
-  ntime <- time*24*2                                         ## days transformation into 0.5h-intervalls
-  time_step <- 30*60                                         ## half hour time steps
+  ntime <- time*24*2                                         ## days transformation into 0.5h-intervals
 
   ## empty objects for the loop
   ptrack <- array(0, c(length(as.vector(pts))/3, 3, ntime))  ## create an empty array to store particle-tracks
@@ -113,9 +112,9 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams, loop_tr
     thisw <- i_w[dmap$nn.idx]                             ## w-component of ROMS
 
     ## update this time step longitude, latitude, depth
-    pnow[,1] <- plast[,1] + (thisu * time_step) / (1.852 * 60 * 1000 * cos(pnow[,2] * pi/180))
-    pnow[,2] <- plast[,2] + (thisv * time_step) / (1.852 * 60 * 1000)
-    pnow[,3] <- pmin(0, plast[,3])  + ((thisw + w_sink)* time_step )
+    pnow[,1] <- plast[,1] + (thisu * time_steps_in_s) / (1.852 * 60 * 1000 * cos(pnow[,2] * pi/180))
+    pnow[,2] <- plast[,2] + (thisv * time_steps_in_s) / (1.852 * 60 * 1000)
+    pnow[,3] <- pmin(0, plast[,3])  + ((thisw + w_sink)* time_steps_in_s )
 
 #     stopped <- (pnow[,1] < roms_ext[1] | pnow[,1] > roms_ext[2] |
 #                   pnow[,2] < roms_ext[3] | pnow[,2] > roms_ext[4]

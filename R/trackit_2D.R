@@ -68,7 +68,7 @@
 
 
 
-trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, force_final_settling=FALSE, romsparams, seafloor, loop_trackit=FALSE){
+trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, force_final_settling=FALSE, romsparams, seafloor, loop_trackit=FALSE, time_steps_in_s = 1800){
   
   ## We need an id for each particle to be able to follow individual tracks
   id_vec <- seq_len(nrow(pts))
@@ -101,9 +101,8 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
   
   ## w_sink is m/days, time is days
   w_sink <- -w_sink/(60*60*24)                               ## sinking speed transformation into m/sec
-  ntime <- time*24*2                                         ## days transformation into 0.5h-intervalls
-  time_step <- 30*60                                         ## half hour time steps
-  
+  ntime <- time*24*2                                         ## days transformation into 0.5h-intervals
+
   ## empty objects for the loop
   ptrack <- array(0, c(length(as.vector(pts))/3, 3, ntime))  ## create an empty array to store particle-tracks
   stopped <- rep(FALSE, length(as.vector(pts))/3)            ## create a stopping-vector
@@ -161,11 +160,11 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
     thish <- h[idx_for_roms]                               ## depth of ROMS-cell
     
     ## update this time step longitude, latitude, depth
-    pnow[,1] <- plast[,1] + (thisu * time_step) / (1.852 * 60 * 1000 * cos(pnow[,2] * pi/180))
-    pnow[,2] <- plast[,2] + (thisv * time_step) / (1.852 * 60 * 1000)
+    pnow[,1] <- plast[,1] + (thisu * time_steps_in_s) / (1.852 * 60 * 1000 * cos(pnow[,2] * pi/180))
+    pnow[,2] <- plast[,2] + (thisv * time_steps_in_s) / (1.852 * 60 * 1000)
     
     ## different to 3D this line
-    #pnow[,3] <- pmin(0, plast[,3])  + ((thisw + w_sink)* time_step )
+    #pnow[,3] <- pmin(0, plast[,3])  + ((thisw + w_sink)* time_steps_in_s )
     
     ##########---- only in trackit_2D:
 
