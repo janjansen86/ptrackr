@@ -16,6 +16,7 @@
 #' @param particle_radius particle radius for the sedimentation, default is set to 0.16mm
 #' @param force_final_settling This can be set to TRUE to force all floating particles at the end of the model-run to settle. This is useful because otherwise a stopindex for those points is not defined
 #' @param romsparams parameters that are filled when this function is called from loopit 
+#' @param uphill_restricted define whether particles are restricted from moving uphill, defined as from how many meters difference particles cannot cross between cells
 #'
 #' @return list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices = indices, indices_2D = indices_2D)
 #' @export
@@ -68,7 +69,7 @@
 
 
 
-trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, force_final_settling=FALSE, romsparams, seafloor, loop_trackit=FALSE, time_steps_in_s = 1800){
+trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, force_final_settling=FALSE, romsparams, seafloor, loop_trackit=FALSE, time_steps_in_s = 1800, uphill_restricted=NULL){
   
   ## We need an id for each particle to be able to follow individual tracks
   id_vec <- seq_len(nrow(pts))
@@ -170,9 +171,10 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
 
     ## make sure particles are not travelling upwards to cells more than 30m higher
     #if (depth of pnow) < (depth of plast) then assign plast to pnow with no displacement
-    uphill <- h[tdp_idx] > thish+10
-
-    pnow[uphill==TRUE,] <- plast[uphill==TRUE,]
+    if(exists("uphill_resticted")){
+      uphill <- h[tdp_idx] > thish + uphill_restricted
+      pnow[uphill==TRUE,] <- plast[uphill==TRUE,]
+    }
     
     ## stopping conditions (when outside the limits of the area) 
     stopped <- (pnow[,1] < roms_ext[1] | pnow[,1] > roms_ext[2] |

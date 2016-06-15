@@ -16,6 +16,7 @@
 #' @param looping_time default at 0.25 which is equal to the 6h intervall of the ROMS-model
 #' @param sedimentation TRUE/FALSE with default as FALSE, should particles settle on the seafloor depending on current speed and particle density (McCave & Swift 1976)
 #' @param particle_radius radius of the particles, this influences the sedimentation rate with smaller values meaning less sedimentation
+#' @param uphill_restricted define whether particles are restricted from moving uphill, defined as from how many meters difference particles cannot cross between cells
 #' 
 #' @return list(pts=pts, pend=pend, stopindex=obj$stopindex, ptrack=obj$ptrack, lon_list=lon_list, idx_list=idx_list, idx_list_2D=idx_list_2D, id_list=id_list)
 #' @export
@@ -83,7 +84,7 @@
 
 
 loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1, domain = "2D", trajectories = FALSE,
-                        speed, runtime = 10, looping_time = 0.25, sedimentation=FALSE, particle_radius=0.00016, time_steps_in_s=1800){
+                        speed, runtime = 10, looping_time = 0.25, sedimentation=FALSE, particle_radius=0.00016, time_steps_in_s=1800, uphill_restricted=NULL){
   pts <- pts_seeded
   loop_length <- looping_time*24*2
   
@@ -170,7 +171,8 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
     }else{
 #       obj <- loopit_trackit_2D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time)
       obj <- trackit_2D(pts=pts, romsobject=romsobject, w_sink=speed, time=looping_time,
-                        romsparams=romsparams, sedimentation=sedimentation, particle_radius=particle_radius, loop_trackit=TRUE, time_steps_in_s=time_steps_in_s)
+                        romsparams=romsparams, loop_trackit=TRUE, time_steps_in_s=time_steps_in_s,
+                        sedimentation=sedimentation, particle_radius=particle_radius, uphill_restricted=uphill_restricted)
       
     }
       
