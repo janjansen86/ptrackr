@@ -6,7 +6,8 @@
 \usage{
 trackit_2D(pts, romsobject, w_sink = 100, time = 50,
   sedimentation = FALSE, particle_radius = 0.00016,
-  force_final_settling = FALSE, romsparams, seafloor, loop_trackit = FALSE)
+  force_final_settling = FALSE, romsparams, sedimentationparams,
+  loop_trackit = FALSE, time_steps_in_s = 1800, uphill_restricted = NULL)
 }
 \arguments{
 \item{pts}{input points}
@@ -22,6 +23,10 @@ trackit_2D(pts, romsobject, w_sink = 100, time = 50,
 \item{force_final_settling}{This can be set to TRUE to force all floating particles at the end of the model-run to settle. This is useful because otherwise a stopindex for those points is not defined}
 
 \item{romsparams}{parameters that are filled when this function is called from loopit}
+
+\item{sedimentationparams}{parameters estimated through the buildparams-function}
+
+\item{uphill_restricted}{define whether particles are restricted from moving uphill, defined as from how many meters difference particles cannot cross between cells}
 
 \item{kdtree}{kd tree}
 }

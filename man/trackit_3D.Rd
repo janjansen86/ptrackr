@@ -5,7 +5,7 @@
 \title{Trackit 3D}
 \usage{
 trackit_3D(pts, romsobject, w_sink = 100, time = 50, romsparams,
-  loop_trackit = FALSE)
+  loop_trackit = FALSE, time_steps_in_s = 1800)
 }
 \arguments{
 \item{pts}{input points}

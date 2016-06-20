@@ -120,9 +120,9 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
   ## allow for different starting ROMS-slices (re-arrange the vector)
   sliced_vector <- curr_vector[c(start_slice:length(curr_vector),1:(start_slice-1))]
   
-  params <- NULL
+  sedimentationparams <- NULL
   if(domain == "2D"){
-     buildparams(speed, r=particle_radius)  # loopit_trackit_2D only needs testFunct
+     sedimentationparams <- buildparams(speed, r=particle_radius)  # loopit_trackit_2D only needs testFunct
 #     params <- list(
 #     ## from Jenkins & Bombosch (1995)
 #     p0 =1030,             #kg/m^3 seawater density
@@ -174,7 +174,7 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
     }else{
 #       obj <- loopit_trackit_2D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time)
       obj <- trackit_2D(pts=pts, romsobject=romsobject, w_sink=speed, time=looping_time,
-                        romsparams=romsparams, sedimentationparams=params, loop_trackit=TRUE, time_steps_in_s=time_steps_in_s,
+                        romsparams=romsparams, sedimentationparams=sedimentationparams, loop_trackit=TRUE, time_steps_in_s=time_steps_in_s,
                         sedimentation=sedimentation, particle_radius=particle_radius, uphill_restricted=uphill_restricted)
       
     }

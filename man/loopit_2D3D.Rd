@@ -6,7 +6,8 @@
 \usage{
 loopit_2D3D(pts_seeded, romsobject, roms_slices = 1, start_slice = 1,
   domain = "2D", trajectories = FALSE, speed, runtime = 10,
-  looping_time = 0.25, sedimentation = FALSE, particle_radius = 0.00016)
+  looping_time = 0.25, sedimentation = FALSE, particle_radius = 0.00016,
+  time_steps_in_s = 1800, uphill_restricted = NULL)
 }
 \arguments{
 \item{pts_seeded}{matrix of particles with 3 colums (lon, lat, depth)}
@@ -30,6 +31,8 @@ loopit_2D3D(pts_seeded, romsobject, roms_slices = 1, start_slice = 1,
 \item{sedimentation}{TRUE/FALSE with default as FALSE, should particles settle on the seafloor depending on current speed and particle density (McCave & Swift 1976)}
 
 \item{particle_radius}{radius of the particles, this influences the sedimentation rate with smaller values meaning less sedimentation}
+
+\item{uphill_restricted}{define whether particles are restricted from moving uphill, defined as from how many meters difference particles cannot cross between cells}
 }
 \value{
 list(pts=pts, pend=pend, stopindex=obj$stopindex, ptrack=obj$ptrack, lon_list=lon_list, idx_list=idx_list, idx_list_2D=idx_list_2D, id_list=id_list)

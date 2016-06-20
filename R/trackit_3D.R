@@ -64,16 +64,16 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams, loop_tr
   }
 
   ## assign current speeds and depth for each ROMS-cell (lat/lon position)
-  if(missing(romsparams)){
-    i_u <- romsobject$i_u
-    i_v <- romsobject$i_v
-    i_w <- romsobject$i_w
-    h <- romsobject$h
-  }else{
+  if(exists("romsparams")){
     i_u <- romsparams$i_u
     i_v <- romsparams$i_v
     i_w <- romsparams$i_w
     h <- romsparams$h
+  }else{
+    i_u <- romsobject$i_u
+    i_v <- romsobject$i_v
+    i_w <- romsobject$i_w
+    h <- romsobject$h
   }
 #   i_u <- romsobject$i_u
 #   i_v <- romsobject$i_v

@@ -17,6 +17,7 @@
 #' @param force_final_settling This can be set to TRUE to force all floating particles at the end of the model-run to settle. This is useful because otherwise a stopindex for those points is not defined
 #' @param romsparams parameters that are filled when this function is called from loopit 
 #' @param uphill_restricted define whether particles are restricted from moving uphill, defined as from how many meters difference particles cannot cross between cells
+#' @param sedimentationparams parameters estimated through the buildparams-function
 #'
 #' @return list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices = indices, indices_2D = indices_2D)
 #' @export
@@ -69,7 +70,7 @@
 
 
 
-trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, force_final_settling=FALSE, romsparams, sedimentationparams, seafloor, loop_trackit=FALSE, time_steps_in_s = 1800, uphill_restricted=NULL){
+trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, force_final_settling=FALSE, romsparams, sedimentationparams, loop_trackit=FALSE, time_steps_in_s = 1800, uphill_restricted=NULL){
   
   ## We need an id for each particle to be able to follow individual tracks
   id_vec <- seq_len(nrow(pts))
@@ -83,22 +84,20 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
     kdtree <- sknn$kdtree
     kdxy <- sknn$kdxy
   }
-
   ## assign current speeds and depth for each ROMS-cell (lat/lon position)
-  if(missing(romsparams)){
-    i_u <- romsobject$i_u
-    i_v <- romsobject$i_v
-    i_w <- romsobject$i_w
-    h <- romsobject$h
-    roms_ext <- c(min(romsobject$lon_u), max(romsobject$lon_u), min(romsobject$lat_u), max(romsobject$lat_u))
-  }else{
+  if(exists("romsparams")){
     i_u <- romsparams$i_u
     i_v <- romsparams$i_v
     i_w <- romsparams$i_w
     h <- romsparams$h
     roms_ext <- romsparams$roms_ext
+  }else{
+    i_u <- romsobject$i_u
+    i_v <- romsobject$i_v
+    i_w <- romsobject$i_w
+    h <- romsobject$h
+    roms_ext <- c(min(romsobject$lon_u), max(romsobject$lon_u), min(romsobject$lat_u), max(romsobject$lat_u))
   }
-  
   ## w_sink is m/days, time is days
   w_sink <- -w_sink/(60*60*24)                               ## sinking speed transformation into m/sec
   ntime <- time*24*2                                         ## days transformation into 0.5h-intervals
@@ -111,11 +110,10 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
   indices_2D <- vector("list", ntime)                        ## a list of indices to store which 2D-cell a particle is in                       
 
   pnow <- plast <- pts                ## copies of the starting points for updating in the loop
-  
   ## different to 3D this two lines
-  if(missing(sedimentationparams)) params <- buildparams(w_sink, r=particle_radius)
-  else params <- sedimentationparams
-
+  if(exists("sedimentationparams")) params <- sedimentationparams
+  else params <- buildparams(w_sink, r=particle_radius)
+  
   for (itime in seq_len(ntime)) {
     
     ## different to trackit_3D in these two lines: find depth for each pnow
@@ -184,7 +182,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
       U_div[U_div<0] <-0
       ## calculate number of points to settle for each cell (equation from McCave & Swift)
       cell_chars[,4] <- params$testFunct(U_div, cell_chars[,3])
-      
+
       #colnames(cell_chars) <- c("cell_index","velocity","n_pts_in_cell","n_pts_to_drop")
       
       ## forced settling out of the suspension:                      
