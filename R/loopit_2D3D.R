@@ -122,7 +122,7 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
   
   params <- NULL
   if(domain == "2D"){
-     buildparams(speed)  # loopit_trackit_2D only needs testFunct
+     buildparams(speed, r=particle_radius)  # loopit_trackit_2D only needs testFunct
 #     params <- list(
 #     ## from Jenkins & Bombosch (1995)
 #     p0 =1030,             #kg/m^3 seawater density
@@ -145,7 +145,10 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
   romsparams$i_u <- all_i_u
   romsparams$i_v <- all_i_v
   romsparams$i_w <- all_i_w
-
+  
+  ## boundaries of the ROMS-area
+  romsparams$roms_ext <- c(min(romsobject$lon_u), max(romsobject$lon_u), min(romsobject$lat_u), max(romsobject$lat_u))
+  
   runtime <- roms_slices*runtime                                ## counting full days
   
   ## loop over different time-slices
@@ -171,7 +174,7 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
     }else{
 #       obj <- loopit_trackit_2D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time)
       obj <- trackit_2D(pts=pts, romsobject=romsobject, w_sink=speed, time=looping_time,
-                        romsparams=romsparams, loop_trackit=TRUE, time_steps_in_s=time_steps_in_s,
+                        romsparams=romsparams, sedimentationparams=params, loop_trackit=TRUE, time_steps_in_s=time_steps_in_s,
                         sedimentation=sedimentation, particle_radius=particle_radius, uphill_restricted=uphill_restricted)
       
     }

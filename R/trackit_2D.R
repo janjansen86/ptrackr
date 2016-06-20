@@ -69,7 +69,7 @@
 
 
 
-trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, force_final_settling=FALSE, romsparams, seafloor, loop_trackit=FALSE, time_steps_in_s = 1800, uphill_restricted=NULL){
+trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, force_final_settling=FALSE, romsparams, sedimentationparams, seafloor, loop_trackit=FALSE, time_steps_in_s = 1800, uphill_restricted=NULL){
   
   ## We need an id for each particle to be able to follow individual tracks
   id_vec <- seq_len(nrow(pts))
@@ -90,15 +90,14 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
     i_v <- romsobject$i_v
     i_w <- romsobject$i_w
     h <- romsobject$h
+    roms_ext <- c(min(romsobject$lon_u), max(romsobject$lon_u), min(romsobject$lat_u), max(romsobject$lat_u))
   }else{
     i_u <- romsparams$i_u
     i_v <- romsparams$i_v
     i_w <- romsparams$i_w
     h <- romsparams$h
+    roms_ext <- romsparams$roms_ext
   }
-  
-  ## boundaries of the ROMS-area
-  roms_ext <- c(min(romsobject$lon_u), max(romsobject$lon_u), min(romsobject$lat_u), max(romsobject$lat_u))
   
   ## w_sink is m/days, time is days
   w_sink <- -w_sink/(60*60*24)                               ## sinking speed transformation into m/sec
@@ -113,22 +112,10 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
 
   pnow <- plast <- pts                ## copies of the starting points for updating in the loop
   
-  ## different to 3D this line
-  if(sedimentation) params <- buildparams(w_sink, r=particle_radius)
-    #     ## for the stopping conditions of the particles, determine stop or keep floating by this sedimentation process:
-    #     ## from Jenkins & Bombosch (1995)
-    #     p0 <- 1030             #kg/m^3 seawater density
-    #     p1 <- 1100             #kg/m^3 Diatom density (so far a quick-look-up-average density from Ierland & Peperzak (1984))
-    #     cosO <- 1              #its 1 for 90degrees
-    #     g <- 9.81              #accelaration due to gravity
-    #     K <- 0.0025            #drag coefficient
-    #     E <- 1                 #aspect ration of settling flocks (spherical = 1 ??)
-    #     r <- 0.00016           #particle-radius
-    #     Wd <- w_sink/24/3600
-    #     Ucsq <- -(0.05*(p0-p1)*g*2*(1.5*E)^(1/3)*r)/(p0*K)
-    #     testFunct <- function(U_div,dens) 1800*-(p1*(dens)*Wd*cos(90)*(U_div)*(U_div))/p0
-  
-  
+  ## different to 3D this two lines
+  if(missing(sedimentationparams)) params <- buildparams(w_sink, r=particle_radius)
+  else params <- sedimentationparams
+
   for (itime in seq_len(ntime)) {
     
     ## different to trackit_3D in these two lines: find depth for each pnow
@@ -198,7 +185,8 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
       ## calculate number of points to settle for each cell (equation from McCave & Swift)
       cell_chars[,4] <- params$testFunct(U_div, cell_chars[,3])
       
-      colnames(cell_chars) <- c("cell_index","velocity","n_pts_in_cell","n_pts_to_drop")
+      #colnames(cell_chars) <- c("cell_index","velocity","n_pts_in_cell","n_pts_to_drop")
+      
       ## forced settling out of the suspension:                      
       ## create an object to store points to be dropped
       #drop_pts <- rep(F,length(pnow)/2)                     
