@@ -145,17 +145,17 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
     thish <- h[idx_for_roms]                               ## depth of ROMS-cell
     
     ## update this time step longitude, latitude, depth
-    pnow[,1] <- plast[,1] + (thisu * time_steps_in_s) / (1.852 * 60 * 1000 * cos(pnow[,2] * pi/180))
+    pnow[,1] <- plast[,1] + (thisu * time_steps_in_s) / (1.852 * 60 * 1000 * cos(plast[,2] * pi/180))
     pnow[,2] <- plast[,2] + (thisv * time_steps_in_s) / (1.852 * 60 * 1000)
     ## different to 3D this line
     #pnow[,3] <- pmin(0, plast[,3])  + ((thisw + w_sink)* time_steps_in_s )
     
     ##########---- only in trackit_2D:
-    tdp_idx <- idx_for_roms
+    tdp_idx <- kdxy$query(pnow[,1:2], k = 1, eps = 0)$nn.idx
     ## make sure particles are not travelling upwards to cells more than 30m higher
     #if (depth of pnow) < (depth of plast) then assign plast to pnow with no displacement
     if(!is.null(uphill_restricted)){
-      uphill <- h[tdp_idx] > thish + uphill_restricted
+      uphill <- h[tdp_idx] < thish - uphill_restricted
       pnow[uphill==TRUE,] <- plast[uphill==TRUE,]
     }
     

@@ -110,7 +110,7 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams=NULL, lo
     thisw <- i_w[idx_for_roms]                             ## w-component of ROMS
 
     ## update this time step longitude, latitude, depth
-    pnow[,1] <- plast[,1] + (thisu * time_steps_in_s) / (1.852 * 60 * 1000 * cos(pnow[,2] * pi/180))
+    pnow[,1] <- plast[,1] + (thisu * time_steps_in_s) / (1.852 * 60 * 1000 * cos(plast[,2] * pi/180))
     pnow[,2] <- plast[,2] + (thisv * time_steps_in_s) / (1.852 * 60 * 1000)
     pnow[,3] <- pmin(0, plast[,3])  + ((thisw + w_sink)* time_steps_in_s )
     
