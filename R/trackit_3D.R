@@ -63,26 +63,21 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams, loop_tr
     kdxy <- sknn$kdxy
   }
 
-  ## assign current speeds and depth for each ROMS-cell (lat/lon position)
+  ## assign current speeds and depth for each ROMS-cell (lat/lon position), and boundaries of the region
   if(exists("romsparams")){
     i_u <- romsparams$i_u
     i_v <- romsparams$i_v
     i_w <- romsparams$i_w
     h <- romsparams$h
+    #roms_ext <- romsparams$roms_ext
   }else{
     i_u <- romsobject$i_u
     i_v <- romsobject$i_v
     i_w <- romsobject$i_w
     h <- romsobject$h
+    #roms_ext <- c(min(romsobject$lon_u), max(romsobject$lon_u), min(romsobject$lat_u), max(romsobject$lat_u))
   }
-#   i_u <- romsobject$i_u
-#   i_v <- romsobject$i_v
-#   i_w <- romsobject$i_w
-#   h <- romsobject$h
-  
-  ## boundaries of the ROMS-area
-  # roms_ext <- c(min(romsobject$lon_u), max(romsobject$lon_u), min(romsobject$lat_u), max(romsobject$lat_u))
-  
+
   ## w_sink is m/days, time is days
   w_sink <- -w_sink/(60*60*24)                               ## sinking speed transformation into m/sec
   ntime <- time*24*2                                         ## days transformation into 0.5h-intervals
@@ -105,27 +100,29 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams, loop_tr
     ## store indices for tracing particle positions
     indices[[itime]] <- dmap$nn.idx
     indices_2D[[itime]] <- two_dim_pos$nn.idx
+    
+    ## different to 2D in this line:
+    idx_for_roms <- dmap$nn.idx
 
     ## extract component values from the vars
-    thisu <- i_u[dmap$nn.idx]                             ## u-component of ROMS
-    thisv <- i_v[dmap$nn.idx]                             ## v-component of ROMS
-    thisw <- i_w[dmap$nn.idx]                             ## w-component of ROMS
+    thisu <- i_u[idx_for_roms]                             ## u-component of ROMS
+    thisv <- i_v[idx_for_roms]                             ## v-component of ROMS
+    thisw <- i_w[idx_for_roms]                             ## w-component of ROMS
 
     ## update this time step longitude, latitude, depth
     pnow[,1] <- plast[,1] + (thisu * time_steps_in_s) / (1.852 * 60 * 1000 * cos(pnow[,2] * pi/180))
     pnow[,2] <- plast[,2] + (thisv * time_steps_in_s) / (1.852 * 60 * 1000)
     pnow[,3] <- pmin(0, plast[,3])  + ((thisw + w_sink)* time_steps_in_s )
-
+    
+    ## different to 2D here
 #     stopped <- (pnow[,1] < roms_ext[1] | pnow[,1] > roms_ext[2] |
 #                   pnow[,2] < roms_ext[3] | pnow[,2] > roms_ext[4]
 #                 )
 #     
     ##########---- only in trackit_3D:
-    
     ## stopping conditions (hit the bottom)
     stopped <- pnow[,3] <= -h[two_dim_pos$nn.idx]
     stopindex[stopindex == 0 & stopped] <- itime
-    
     ##########----
     
     ## assign stopping location of points to ptrack

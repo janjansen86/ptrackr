@@ -92,12 +92,12 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
   all_i_u <- romsobject$i_u
   all_i_v <- romsobject$i_v
   all_i_w <- romsobject$i_w
-
+  
   ## setup kdtree
   sknn <- with(romsobject, setup_knn(lon_u, lat_u, hh))             # (lon_roms=lon_u, lat_roms=lat_u, depth_roms=hh)
   romsobject$kdtree <- sknn$kdtree
   romsobject$kdxy <- sknn$kdxy
- 
+  
   ## create lists to store all particles that settled at the end of each tracking-loop
   lon_list <- list()
   lat_list <- list()
@@ -105,47 +105,31 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
     depth_list <- list()
   
   ## create lists to store the positions of each particle in each time-step
-  if(missing(trajectories)){
-    trajectories <- FALSE
-  } else if(trajectories == TRUE){
+  if(trajectories == TRUE){
     idx_list <- list()
     idx_list_2D <- list()
     id_list <- list()
     id_vec <- seq_len(nrow(pts_seeded))
   }
-  if(missing(runtime)){
-    runtime <- ceiling(max(h)/speed)                  ## no runtime defined
-  } else runtime <- runtime                           ## runtime defined
+#   if(missing(runtime)){
+#     runtime <- ceiling(max(h)/speed)                  ## no runtime defined
+#   } else 
+  runtime <- runtime                           ## runtime defined
+  
   curr_vector <- rep(1:roms_slices,runtime)
   ## allow for different starting ROMS-slices (re-arrange the vector)
   sliced_vector <- curr_vector[c(start_slice:length(curr_vector),1:(start_slice-1))]
   
-  sedimentationparams <- NULL
-  if(domain == "2D"){
-     sedimentationparams <- buildparams(speed, r=particle_radius)  # loopit_trackit_2D only needs testFunct
-#     params <- list(
-#     ## from Jenkins & Bombosch (1995)
-#     p0 =1030,             #kg/m^3 seawater density
-#     p1 =1100,             #kg/m^3 Diatom density (so far a quick-look-up-average density from Ierland & Peperzak (1984))
-#     cosO =1,              #its 1 for 90degrees
-#     g =9.81,              #accelaration due to gravity
-#     K =0.0025,            #drag coefficient
-#     E =1,                 #aspect ration of settling flocks (spherical = 1 ??)
-#     r =0.00016,           #particle-radius
-#     Wd =speed/24/3600,
-#     Ucsq =-(0.05*(p0-p1)*g*2*(1.5*E)^(1/3)*r)/(p0*K),
-#     testFunct =function(U_div,dens) 1800*-(p1*(dens)*Wd*cos(90)*(U_div)*(U_div))/p0
-#     )
-#     
-    }
+#   sedimentationparams <- NULL
+  if(domain == "2D") sedimentationparams <- buildparams(speed, r=particle_radius)
+  
+  ## prepare list with parameters of the ROMS
   romsparams <- list()
   romsparams$h <- romsobject$h
-  
   ## assign current-speed/direction to the cells
   romsparams$i_u <- all_i_u
   romsparams$i_v <- all_i_v
   romsparams$i_w <- all_i_w
-  
   ## boundaries of the ROMS-area
   romsparams$roms_ext <- c(min(romsobject$lon_u), max(romsobject$lon_u), min(romsobject$lat_u), max(romsobject$lat_u))
   
@@ -163,29 +147,23 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
     
     ## save an id for each particle to follow its path
     if(trajectories) id_list[[irun]] <- id_vec
-
+    
     ## run the particle-tracking for all floating particles
-    if(domain == "3D"){
-#       obj <- loopit_trackit_3D(pts = pts, romsobject = romsobject, 
-#                                w_sink = speed, time = looping_time, parameters = params)
-      obj <- trackit_3D(pts=pts, romsobject=romsobject, w_sink=speed, time=looping_time,
-                        romsparams=romsparams, loop_trackit=TRUE, time_steps_in_s=time_steps_in_s)
-      
-    }else{
-#       obj <- loopit_trackit_2D(pts = pts, romsobject = romsobject, w_sink = speed, time = looping_time)
-      obj <- trackit_2D(pts=pts, romsobject=romsobject, w_sink=speed, time=looping_time,
-                        romsparams=romsparams, sedimentationparams=sedimentationparams, loop_trackit=TRUE, time_steps_in_s=time_steps_in_s,
-                        sedimentation=sedimentation, particle_radius=particle_radius, uphill_restricted=uphill_restricted)
-      
+    if(domain == "3D"){ obj <- trackit_3D(pts=pts, romsobject=romsobject, w_sink=speed, time=looping_time, romsparams=romsparams,
+                                          loop_trackit=TRUE, time_steps_in_s=time_steps_in_s)
+    
+    }else{              obj <- trackit_2D(pts=pts, romsobject=romsobject, w_sink=speed, time=looping_time, romsparams=romsparams,
+                                          loop_trackit=TRUE, time_steps_in_s=time_steps_in_s,
+                                          sedimentationparams=sedimentationparams, sedimentation=sedimentation, 
+                                          particle_radius=particle_radius, uphill_restricted=uphill_restricted)
     }
-      
+    
     ## store the particles that stopped (settled)
     lon_list[irun] <- list(obj$ptrack[cbind(seq(nrow(obj$ptrack)), 1, obj$stopindex)])
     lat_list[irun] <- list(obj$ptrack[cbind(seq(nrow(obj$ptrack)), 2, obj$stopindex)])
     ## only for 3D
-    if(domain == "3D")
-      depth_list[irun] <- list(obj$ptrack[cbind(seq(nrow(obj$ptrack)), 3, obj$stopindex)])
-     
+    if(domain == "3D") depth_list[irun] <- list(obj$ptrack[cbind(seq(nrow(obj$ptrack)), 3, obj$stopindex)])
+    
     if(trajectories){
       ## store the cell-indices of each pts from each time-slice
       idx_list[[irun]] <- obj$indices
@@ -202,7 +180,7 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
         }
       }
     } 
-      
+    
     ##re-assign coordinates of floating particles to re-run in "trackit"-function
     if (length(unlist(lon_list))!=nrow(pts_seeded)                                 ## check if all particles are settled
         & !is.null(nrow(obj$ptrack[obj$stopindex==0,,dim(obj$ptrack)[3]]))    ## if there's only one particle left it bugs around...

@@ -84,6 +84,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
     kdtree <- sknn$kdtree
     kdxy <- sknn$kdxy
   }
+  
   ## assign current speeds and depth for each ROMS-cell (lat/lon position)
   if(exists("romsparams")){
     i_u <- romsparams$i_u
@@ -98,6 +99,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
     h <- romsobject$h
     roms_ext <- c(min(romsobject$lon_u), max(romsobject$lon_u), min(romsobject$lat_u), max(romsobject$lat_u))
   }
+  
   ## w_sink is m/days, time is days
   w_sink <- -w_sink/(60*60*24)                               ## sinking speed transformation into m/sec
   ntime <- time*24*2                                         ## days transformation into 0.5h-intervals
@@ -110,9 +112,9 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
   indices_2D <- vector("list", ntime)                        ## a list of indices to store which 2D-cell a particle is in                       
 
   pnow <- plast <- pts                ## copies of the starting points for updating in the loop
-  ## different to 3D this two lines
-  if(exists("sedimentationparams")) params <- sedimentationparams
-  else params <- buildparams(w_sink, r=particle_radius)
+  
+  ## different to 3D this line
+  if(exists("sedimentationparams")) params <- sedimentationparams else params <- buildparams(w_sink, r=particle_radius)
   
   for (itime in seq_len(ntime)) {
     
@@ -125,38 +127,34 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
     
     ## index 1st nearest neighbour of trace points to grid points
     dmap <- kdtree$query(plast, k = 1, eps = 0)           ## one kdtree
-    
     ## and to 2D space
     two_dim_pos <- kdxy$query(plast[,1:2], k = 1, eps = 0)
-    
-    ## two_dim_pos returns the cell-index of each point   (find the nearest grid-point from lon_u/lat_u and return its index)
-    tdp_idx <- two_dim_pos$nn.idx
-    ## different to 3D:
-    idx_for_roms <- two_dim_pos$nn.idx
-    #displacement <- dmap$nn.idx
     
     ## store indices for tracing particle positions
     indices[[itime]] <- dmap$nn.idx
     indices_2D[[itime]] <- two_dim_pos$nn.idx
+    
+    ## different to 3D in this line: (two_dim_pos returns the cell-index of each point, (find the nearest grid-point from lon_u/lat_u and return its index))
+    idx_for_roms <- two_dim_pos$nn.idx
+    #displacement <- dmap$nn.idx
 
     ## extract component values from the vars
     thisu <- i_u[idx_for_roms]                             ## u-component of ROMS
     thisv <- i_v[idx_for_roms]                             ## v-component of ROMS
-    #thisw <- i_w[dmap$nn.idx]                            ## w-component of ROMS
+    #thisw <- i_w[idx_for_roms]                            ## w-component of ROMS
     thish <- h[idx_for_roms]                               ## depth of ROMS-cell
     
     ## update this time step longitude, latitude, depth
     pnow[,1] <- plast[,1] + (thisu * time_steps_in_s) / (1.852 * 60 * 1000 * cos(pnow[,2] * pi/180))
     pnow[,2] <- plast[,2] + (thisv * time_steps_in_s) / (1.852 * 60 * 1000)
-    
     ## different to 3D this line
     #pnow[,3] <- pmin(0, plast[,3])  + ((thisw + w_sink)* time_steps_in_s )
     
     ##########---- only in trackit_2D:
-
+    tdp_idx <- idx_for_roms
     ## make sure particles are not travelling upwards to cells more than 30m higher
     #if (depth of pnow) < (depth of plast) then assign plast to pnow with no displacement
-    if(exists("uphill_resticted")){
+    if(exists("uphill_restricted")){
       uphill <- h[tdp_idx] > thish + uphill_restricted
       pnow[uphill==TRUE,] <- plast[uphill==TRUE,]
     }
