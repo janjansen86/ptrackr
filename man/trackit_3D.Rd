@@ -4,7 +4,7 @@
 \alias{trackit_3D}
 \title{Trackit 3D}
 \usage{
-trackit_3D(pts, romsobject, w_sink = 100, time = 50, romsparams,
+trackit_3D(pts, romsobject, w_sink = 100, time = 50, romsparams = NULL,
   loop_trackit = FALSE, time_steps_in_s = 1800)
 }
 \arguments{

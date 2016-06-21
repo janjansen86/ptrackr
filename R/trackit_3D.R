@@ -48,7 +48,7 @@
 #' ptsxy <- project(as.matrix(pts[,1:2]), projection(pr))  #projection on Tracking-points
 #' points3d(ptsxy[,1], ptsxy[,2], pts[,3]*50, col = "red")
 
-trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams, loop_trackit=FALSE, time_steps_in_s=1800){
+trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams=NULL, loop_trackit=FALSE, time_steps_in_s=1800){
 
   ## We need an id for each particle to follow individual tracks
   id_vec <- seq_len(nrow(pts))
@@ -64,7 +64,7 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams, loop_tr
   }
 
   ## assign current speeds and depth for each ROMS-cell (lat/lon position), and boundaries of the region
-  if(exists("romsparams")){
+  if(!is.null(romsparams)){
     i_u <- romsparams$i_u
     i_v <- romsparams$i_v
     i_w <- romsparams$i_w

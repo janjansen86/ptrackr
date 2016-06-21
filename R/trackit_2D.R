@@ -70,7 +70,7 @@
 
 
 
-trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, force_final_settling=FALSE, romsparams, sedimentationparams, loop_trackit=FALSE, time_steps_in_s = 1800, uphill_restricted=NULL){
+trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, force_final_settling=FALSE, romsparams=NULL, sedimentationparams=NULL, loop_trackit=FALSE, time_steps_in_s = 1800, uphill_restricted=NULL){
   
   ## We need an id for each particle to be able to follow individual tracks
   id_vec <- seq_len(nrow(pts))
@@ -86,7 +86,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
   }
   
   ## assign current speeds and depth for each ROMS-cell (lat/lon position)
-  if(exists("romsparams")){
+  if(!is.null(romsparams)){
     i_u <- romsparams$i_u
     i_v <- romsparams$i_v
     i_w <- romsparams$i_w
@@ -114,7 +114,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
   pnow <- plast <- pts                ## copies of the starting points for updating in the loop
   
   ## different to 3D this line
-  if(exists("sedimentationparams")) params <- sedimentationparams else params <- buildparams(w_sink, r=particle_radius)
+  if(!is.null(sedimentationparams)) params <- sedimentationparams else params <- buildparams(w_sink, r=particle_radius)
   
   for (itime in seq_len(ntime)) {
     
@@ -154,7 +154,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
     tdp_idx <- idx_for_roms
     ## make sure particles are not travelling upwards to cells more than 30m higher
     #if (depth of pnow) < (depth of plast) then assign plast to pnow with no displacement
-    if(exists("uphill_restricted")){
+    if(!is.null(uphill_restricted)){
       uphill <- h[tdp_idx] > thish + uphill_restricted
       pnow[uphill==TRUE,] <- plast[uphill==TRUE,]
     }
