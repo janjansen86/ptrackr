@@ -38,7 +38,7 @@ loopit_2D3D(pts_seeded, romsobject, roms_slices = 1, start_slice = 1,
 list(pts=pts, pend=pend, stopindex=obj$stopindex, ptrack=obj$ptrack, lon_list=lon_list, idx_list=idx_list, idx_list_2D=idx_list_2D, id_list=id_list)
 }
 \description{
-WORKING FINE FOR BOTH 2D AND 3D
+Wrapper function to increase performance by looping the trackit-functions in small time intervalls.
 }
 \details{
 Function to run the functions loopit_trackit_2D/loopit_trackit_3D to follow particles through different consecutive ROMS-sclices. Looping can also increase performance when using very large number of particles by looping through shorter time steps.

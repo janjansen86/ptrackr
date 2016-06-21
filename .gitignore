@@ -3,3 +3,4 @@
 .RData
 *.Rproj
 data-raw/*.nc
+inst/doc

@@ -1,5 +1,3 @@
-
-
 #' Generate points proportionally to surface chlorophyll-a values.
 #'
 #' Transform surface-chlorophyll values into a randomly distributed relative number of points on a plane depending on the value of each cell.

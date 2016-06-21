@@ -22,13 +22,11 @@ trackit_3D(pts, romsobject, w_sink = 100, time = 50, romsparams = NULL,
 list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices = indices, indices_2D = indices_2D)
 }
 \description{
-Function to track particles through a ROMS-field.
+Function to track particles through a 3D ROMS-field.
 }
 \details{
-the function needs an input for speed of the sinking particles (w_sink) and for time
-due to the limitation of RAM available, time is restricted depending on the number of particles
+Due to the limitation of RAM available, time is restricted depending on the number of particles
 (too long runs might give an error because the generated vector is too large)
-I found half days work great
 }
 \examples{
 data(surface_chl)

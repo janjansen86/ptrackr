@@ -1,12 +1,14 @@
 Package: ptrackr
 Type: Package
-Title: Tracking Individual Particles Through 3D-Space
+Title: Tracking Individual Particles Through 2D- and 3D-Space
 Version: 0.1
 Date: 2016-02-01
-Authors@R: person("Jan","Jansen", role = c("aut", "cre"), email =
-    "jan.jansen@utas.edu.au")
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Authors@R: person("Jan","Jansen", role = c("aut", "cre"), 
+    email = "jan.jansen@utas.edu.au")
+Description: ptrackr allows to track the displacement of single particles via currents defined by a Regional Oceanographic Modelling System (ROMS). 
+    ptrackr uses the speed and direction of currents to repeatedly update the position of particles individually at specific time-intervalls for a given time-span. 
+    The original purpose of this package is tracking particles from the surface to the seafloor, and modelling the resuspension and sedimentation processes on the seafloor.
+License: GPL-3
 LazyData: TRUE
 Depends: raster
 Imports:
@@ -16,3 +18,6 @@ Imports:
     spatstat,
     stringr
 RoxygenNote: 5.0.1
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr

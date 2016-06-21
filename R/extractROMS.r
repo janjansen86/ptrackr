@@ -14,6 +14,5 @@ extractROMS <- function(roms, time = 1) {
   obj$i_u <-obj$i_u[,,,time]
   obj$i_v <-obj$i_v[,,,time]
   obj$i_w <-obj$i_w[,,,time]
-
   obj
 }

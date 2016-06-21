@@ -1,6 +1,6 @@
 #' Trackit 3D
 #'
-#' Function to track particles through a ROMS-field.
+#' Function to track particles through a 3D ROMS-field.
 #'
 #' Due to the limitation of RAM available, time is restricted depending on the number of particles
 #' (too long runs might give an error because the generated vector is too large)

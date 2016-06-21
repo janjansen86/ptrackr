@@ -177,7 +177,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
        ##no erosion:    
       U_div[U_div<0] <-0
       ## calculate number of points to settle for each cell (equation from McCave & Swift)
-      cell_chars[,4] <- params$testFunct(U_div, cell_chars[,3])
+      cell_chars[,4] <- params$SedFunct(U_div, cell_chars[,3])
 
       #colnames(cell_chars) <- c("cell_index","velocity","n_pts_in_cell","n_pts_to_drop")
       

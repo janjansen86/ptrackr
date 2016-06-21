@@ -19,7 +19,4 @@ list, kdtree, kdxy
 \description{
 Setup k-nearest-neighbour upfront for use in the particle tracking loops.
 }
-\details{
-Details
-}
 
