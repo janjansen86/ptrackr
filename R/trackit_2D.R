@@ -2,11 +2,9 @@
 #' 
 #' Function to track particles through a ROMS-field in 2D-space. 
 #' 
-#' the function needs an input for speed of the sinking particles (w_sink) and for time
-#' due to the limitation of RAM available, time is restricted depending on the number of particles
+#' Due to the limitation of RAM available, time is restricted depending on the number of particles
 #' (too long runs might give an error because the generated vector is too large)
-#' I found half days work great
-#' If sedimentation=T, then particles stop in areas with low current speed. default is F
+#' If sedimentation=TRUE, then particles stop in areas with low current speed. default is FALSE
 #'
 #' @param pts input points
 #' @param kdtree kd tree
