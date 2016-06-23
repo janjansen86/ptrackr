@@ -17,6 +17,7 @@
 #' @param sedimentation TRUE/FALSE with default as FALSE, should particles settle on the seafloor depending on current speed and particle density (McCave & Swift 1976)
 #' @param particle_radius radius of the particles, this influences the sedimentation rate with smaller values meaning less sedimentation
 #' @param uphill_restricted define whether particles are restricted from moving uphill, defined as from how many meters difference particles cannot cross between cells
+#' @param sed_at_max_speed particles will settle at all times only depending on the highest current speed given in any of the ROMS slices. Currently this only work when 4 sclices are available. Default is FALSE
 #' 
 #' @return list(pts=pts, pend=pend, stopindex=obj$stopindex, ptrack=obj$ptrack, lon_list=lon_list, idx_list=idx_list, idx_list_2D=idx_list_2D, id_list=id_list)
 #' @export
@@ -81,10 +82,21 @@
 #' df$cell <- cellFromXY(ra, df)
 #' ra[] <- tabulate(df$cell, ncell(ra))
 #' plot(ra)
+#' 
+#' ## looking at the current-slices
+#' roms_list <- list()
+#' par(mfrow=c(2,2))
+#' for(i in 1:4){
+#'   roms_list[[i]] <- rasterize(x = cbind(as.vector(toyROMS$lon_u), as.vector(toyROMS$lat_u)), y= ra, field = as.vector(sqrt((toyROMS$i_u[,,,i]^2)+(toyROMS$i_v[,,,i])^2)))
+#'   plot(roms_list[[i]])
+#' }
+#' par(mfrow=c(1,1))
+
 
 
 loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1, domain = "2D", trajectories = FALSE,
-                        speed, runtime = 10, looping_time = 0.25, sedimentation=FALSE, particle_radius=0.00016, time_steps_in_s=1800, uphill_restricted=NULL){
+                        speed, runtime = 10, looping_time = 0.25, sedimentation=FALSE, particle_radius=0.00016, 
+                        time_steps_in_s=1800, uphill_restricted=NULL, sed_at_max_speed=FALSE){
   pts <- pts_seeded
   loop_length <- looping_time*24*2
   
@@ -133,6 +145,25 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
   ## boundaries of the ROMS-area
   romsparams$roms_ext <- c(min(romsobject$lon_u), max(romsobject$lon_u), min(romsobject$lat_u), max(romsobject$lat_u))
   
+  ## for a differnet approach to calculate sedimentation:
+  if(sed_at_max_speed==TRUE & roms_slices==4){
+    nrow <- dim(romsobject$i_u)[1]
+    ncol <- dim(romsobject$i_u)[2]
+    nlayer <- dim(romsobject$i_u)[3]
+    i_u_max <- array(NA, dim = c(nrow,ncol,nlayer))
+    i_v_max <- array(NA, dim = c(nrow,ncol,nlayer))
+    for(irow in 1:nrow){
+      for(icol in 1:ncol){
+        for(ilayer in 1:nlayer){
+          i_u_max[irow,icol,ilayer] <- max(abs(romsobject$i_u[irow,icol,ilayer,]))
+          i_v_max[irow,icol,ilayer] <- max(abs(romsobject$i_v[irow,icol,ilayer,]))
+        }
+      }
+    }
+    romsparams$i_u_max <- i_u_max
+    romsparams$i_v_max <- i_v_max
+  }
+  
   runtime <- roms_slices*runtime                                ## counting full days
   
   ## loop over different time-slices
@@ -155,7 +186,7 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
     }else{              obj <- trackit_2D(pts=pts, romsobject=romsobject, w_sink=speed, time=looping_time, romsparams=romsparams,
                                           loop_trackit=TRUE, time_steps_in_s=time_steps_in_s,
                                           sedimentationparams=sedimentationparams, sedimentation=sedimentation, 
-                                          particle_radius=particle_radius, uphill_restricted=uphill_restricted)
+                                          particle_radius=particle_radius, uphill_restricted=uphill_restricted, sed_at_max_speed=sed_at_max_speed)
     }
     
     ## store the particles that stopped (settled)

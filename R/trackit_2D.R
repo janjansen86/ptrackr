@@ -68,7 +68,9 @@
 
 
 
-trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, force_final_settling=FALSE, romsparams=NULL, sedimentationparams=NULL, loop_trackit=FALSE, time_steps_in_s = 1800, uphill_restricted=NULL){
+trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, 
+                       force_final_settling=FALSE, romsparams=NULL, sedimentationparams=NULL, loop_trackit=FALSE,
+                       time_steps_in_s = 1800, uphill_restricted=NULL, sed_at_max_speed=FALSE){
   
   ## We need an id for each particle to be able to follow individual tracks
   id_vec <- seq_len(nrow(pts))
@@ -97,7 +99,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
     h <- romsobject$h
     roms_ext <- c(min(romsobject$lon_u), max(romsobject$lon_u), min(romsobject$lat_u), max(romsobject$lat_u))
   }
-  
+
   ## w_sink is m/days, time is days
   w_sink <- -w_sink/(60*60*24)                               ## sinking speed transformation into m/sec
   ntime <- time*24*2                                         ## days transformation into 0.5h-intervals
@@ -169,7 +171,8 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
       ## speed and density for each cell:
       l <- unique(tdp_idx)  #indices of each "used" cell
       #speed in active cells, needs to be in squared for equation
-      cell_chars <- data.frame(cbind(l,i_u[l] ^ 2 + i_v[l] ^ 2))
+      if(sed_at_max_speed==FALSE) cell_chars <- data.frame(cbind(l, i_u[l] ^ 2 + i_v[l] ^ 2))
+      else cell_chars <- data.frame(cbind(l, romsparams$i_u_max[l] ^ 2 + romsparams$i_v_max[l] ^ 2))
       #point-density in active cells
       cell_chars[,3] <- all_dens[l]
       #get u_div from observed and critical velocity 
@@ -184,7 +187,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
       ## forced settling out of the suspension:                      
       ## create an object to store points to be dropped
       #drop_pts <- rep(F,length(pnow)/2)                     
-    
+
       ## qd: the quick and dirty solution
       point_chars <- data.frame(cbind(tdp_idx, cell_chars[match(tdp_idx, cell_chars[,1]),3:4]))
       point_chars[,4] <- -(point_chars[,3] / point_chars[,2])
