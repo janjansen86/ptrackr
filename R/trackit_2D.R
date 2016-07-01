@@ -173,6 +173,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
         
         ## all pts that are really close to the border come back to original position
         pnow[stillstill.uphill==TRUE,] <- plast[stillstill.uphill==TRUE,]
+      }
     }
     
     ## stopping conditions (when outside the limits of the area) 
