@@ -217,10 +217,11 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
         & !is.null(nrow(obj$ptrack[obj$stopindex==0,,dim(obj$ptrack)[3]]))    ## if there's only one particle left it bugs around...
         & length(lon_list)!=runtime){                                         ## if the run stops before all particles are settled, pts should not be overwritten
       if(domain == "3D"){
-        ## Mike doesn't like this!! But it works... How to do it better?
         pts <- matrix(obj$ptrack[obj$stopindex==0,,dim(obj$ptrack)[3]],ncol=3)
       } else pts <- matrix(obj$ptrack[obj$stopindex==0,,dim(obj$ptrack)[3]],ncol=3)
     } else break
+    print(paste0(irun,".loop"))
+    message(paste0(dim(pts)[1]," particles floating"))
   }
   
   ## store stopping-locations of particles

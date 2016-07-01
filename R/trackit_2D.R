@@ -205,7 +205,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
       ## create an object to store points to be dropped
       #drop_pts <- rep(F,length(pnow)/2)                     
 
-      ## qd: the quick and dirty solution
+      ## qd: the quick and dirty solution to find which particles stop
       point_chars <- data.frame(cbind(tdp_idx, cell_chars[match(tdp_idx, cell_chars[,1]),3:4]))
       point_chars[,4] <- -(point_chars[,3] / point_chars[,2])
       t_f <- runif(nrow(point_chars)) <= point_chars[,4]
@@ -219,7 +219,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
     ## assign stopping location of points to ptrack 
     ptrack[,,itime] <- pnow
     plast <- pnow
-    print(itime)
+    if(loop_trackit==FALSE) print(itime)
     if (all(stopindex!=0)) {
       message("exiting, all stopped")
       break 
