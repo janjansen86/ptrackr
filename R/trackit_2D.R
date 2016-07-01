@@ -120,6 +120,11 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
   
   for (itime in seq_len(ntime)) {
     
+    if(loop_trackit==FALSE){
+      if(itime==1) message(paste0("starting # of particles: ",dim(pts)[1]))
+      print(itime)
+    }
+
     ## different to trackit_3D in these two lines: find depth for each pnow
     ## this is not neccessary as the 3D-kdtree already picks the correct cells... why?
     ## I think 1 is the deepest layer, so if you wanted to track particles 2D in another layer, 
@@ -219,7 +224,6 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
     ## assign stopping location of points to ptrack 
     ptrack[,,itime] <- pnow
     plast <- pnow
-    if(loop_trackit==FALSE) print(itime)
     if (all(stopindex!=0)) {
       message("exiting, all stopped")
       break 

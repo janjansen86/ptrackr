@@ -90,6 +90,12 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams=NULL, lo
   pnow <- plast <- pts                ## copies of the starting points for updating in the loop
 
   for (itime in seq_len(ntime)) {
+    
+    if(loop_trackit==FALSE){
+      if(itime==1) message(paste0("starting # of particles: ",dim(pts)[1]))
+      print(itime)
+    }
+    
     ## index 1st nearest neighbour of trace points to grid points
     dmap <- kdtree$query(plast, k = 1, eps = 0)           ## one kdtree
     ## and to 2D space
@@ -126,7 +132,6 @@ trackit_3D <- function(pts, romsobject, w_sink=100, time=50, romsparams=NULL, lo
     ## assign stopping location of points to ptrack
     ptrack[,,itime] <- pnow
     plast <- pnow
-    print(itime)
     if (all(stopped)) {
       message("exiting, all stopped")
       break;

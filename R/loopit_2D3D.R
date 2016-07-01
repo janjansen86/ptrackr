@@ -168,7 +168,9 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
   
   ## loop over different time-slices
   for(irun in 1:runtime){                             
-    
+    if(irun==1) message(paste0("starting # of particles: ",dim(pts)[1]))
+    print(paste0(irun,".loop"))
+
     ## re-assign current-speed/direction to the cells for mulitple slices
     if(roms_slices>1){
       romsparams$i_u <- all_i_u[,,,sliced_vector[irun]]
@@ -220,7 +222,6 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
         pts <- matrix(obj$ptrack[obj$stopindex==0,,dim(obj$ptrack)[3]],ncol=3)
       } else pts <- matrix(obj$ptrack[obj$stopindex==0,,dim(obj$ptrack)[3]],ncol=3)
     } else break
-    print(paste0(irun,".loop"))
     message(paste0(dim(pts)[1]," particles floating"))
   }
   
