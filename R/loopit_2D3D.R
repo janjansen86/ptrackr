@@ -96,7 +96,7 @@
 
 loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1, domain = "2D", trajectories = FALSE,
                         speed, runtime = 10, looping_time = 0.25, sedimentation=FALSE, particle_radius=0.00016, 
-                        time_steps_in_s=1800, uphill_restricted=NULL, sed_at_max_speed=FALSE){
+                        time_steps_in_s=1800, uphill_restricted=NULL, sed_at_max_speed=FALSE, mean_move=FALSE){
   pts <- pts_seeded
   loop_length <- looping_time*24*2
   
@@ -186,7 +186,7 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
     }else{              obj <- trackit_2D(pts=pts, romsobject=romsobject, w_sink=speed, time=looping_time, romsparams=romsparams,
                                           loop_trackit=TRUE, time_steps_in_s=time_steps_in_s,
                                           sedimentationparams=sedimentationparams, sedimentation=sedimentation, 
-                                          particle_radius=particle_radius, uphill_restricted=uphill_restricted, sed_at_max_speed=sed_at_max_speed)
+                                          particle_radius=particle_radius, uphill_restricted=uphill_restricted, sed_at_max_speed=sed_at_max_speed, mean_move=mean_move)
     }
     
     ## store the particles that stopped (settled)

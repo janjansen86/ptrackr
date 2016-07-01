@@ -16,6 +16,7 @@
 #' @param romsparams parameters that are filled when this function is called from loopit 
 #' @param uphill_restricted define whether particles are restricted from moving uphill, defined as from how many meters difference particles cannot cross between cells
 #' @param sedimentationparams parameters estimated through the buildparams-function
+#' @param mean_move to use when uphill_resticted is TRUE. Checks the final position of the particles and when usually they would be located back at their starting point for violating the uhill restriction, the code iterates to find a position in between that might still belong to the ROMS-cell the particle originates from
 #'
 #' @return list(ptrack = ptrack, pnow = pnow, plast = plast, stopindex = stopindex, indices = indices, indices_2D = indices_2D)
 #' @export
@@ -70,7 +71,7 @@
 
 trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE, particle_radius=0.00016, 
                        force_final_settling=FALSE, romsparams=NULL, sedimentationparams=NULL, loop_trackit=FALSE,
-                       time_steps_in_s = 1800, uphill_restricted=NULL, sed_at_max_speed=FALSE){
+                       time_steps_in_s = 1800, uphill_restricted=NULL, sed_at_max_speed=FALSE, mean_move=FALSE){
   
   ## We need an id for each particle to be able to follow individual tracks
   id_vec <- seq_len(nrow(pts))
@@ -114,7 +115,8 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
   pnow <- plast <- pts                ## copies of the starting points for updating in the loop
   
   ## different to 3D this line
-  if(!is.null(sedimentationparams)) params <- sedimentationparams else params <- buildparams(w_sink, r=particle_radius)
+  if(!is.null(sedimentationparams)){params <- sedimentationparams 
+  }else params <- buildparams(w_sink, r=particle_radius)
   
   for (itime in seq_len(ntime)) {
     
@@ -156,7 +158,21 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
     #if (depth of pnow) < (depth of plast) then assign plast to pnow with no displacement
     if(!is.null(uphill_restricted)){
       uphill <- h[tdp_idx] < thish - uphill_restricted
-      pnow[uphill==TRUE,] <- plast[uphill==TRUE,]
+      if(mean_move==FALSE){
+        pnow[uphill==TRUE,] <- plast[uphill==TRUE,]
+      }else if(mean_move==TRUE){
+        ## take the mean position between the location and test in which cell it is
+        pnow[uphill==TRUE,] <- apply(simplify2array(list(pnow[uphill==TRUE,],plast[uphill==TRUE,])), 1:2, mean)
+        test.tdp_idx <- kdxy$query(pnow[,1:2], k = 1, eps = 0)$nn.idx
+        still.uphill <- h[test.tdp_idx] < thish - uphill_restricted
+        
+        ## repeat procedure
+        pnow[still.uphill==TRUE,] <- apply(simplify2array(list(pnow[still.uphill==TRUE,],plast[still.uphill==TRUE,])), 1:2, mean)
+        test2.tdp_idx <- kdxy$query(pnow[,1:2], k = 1, eps = 0)$nn.idx
+        stillstill.uphill <- h[test2.tdp_idx] < thish - uphill_restricted
+        
+        ## all pts that are really close to the border come back to original position
+        pnow[stillstill.uphill==TRUE,] <- plast[stillstill.uphill==TRUE,]
     }
     
     ## stopping conditions (when outside the limits of the area) 
@@ -171,8 +187,8 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
       ## speed and density for each cell:
       l <- unique(tdp_idx)  #indices of each "used" cell
       #speed in active cells, needs to be in squared for equation
-      if(sed_at_max_speed==FALSE) cell_chars <- data.frame(cbind(l, i_u[l] ^ 2 + i_v[l] ^ 2))
-      else cell_chars <- data.frame(cbind(l, romsparams$i_u_max[l] ^ 2 + romsparams$i_v_max[l] ^ 2))
+      if(sed_at_max_speed==FALSE){cell_chars <- data.frame(cbind(l, i_u[l] ^ 2 + i_v[l] ^ 2))
+      }else cell_chars <- data.frame(cbind(l, romsparams$i_u_max[l] ^ 2 + romsparams$i_v_max[l] ^ 2))
       #point-density in active cells
       cell_chars[,3] <- all_dens[l]
       #get u_div from observed and critical velocity 
