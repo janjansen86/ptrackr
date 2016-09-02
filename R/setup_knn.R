@@ -9,7 +9,7 @@
 #' @return list, kdtree, kdxy
 #' @export
 setup_knn <- function(lon_roms=lon_u, lat_roms=lat_u, depth_roms=hh){
-  require(nabor)
+  #require(nabor)
   ## another function: setup knn
   allxyz <- cbind(as.vector(lon_roms), as.vector(lat_roms), as.vector(depth_roms))
   ## needs to be a separate lookup for detecting when we hit the bottom

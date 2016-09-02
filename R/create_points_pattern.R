@@ -18,9 +18,9 @@
 #' 
 create_points_pattern <- function(raster, multi = 1, mld = 0){
   ## requires:
-  require(geostatsp)
-  require(spatstat)
-  chl_image <- asImRaster(raster*multi)  #converts raster into an image with a multiplicator
+  #require(geostatsp)
+  #require(spatstat)
+  chl_image <- as.im.RasterLayer(raster*multi)  #converts raster into an image with a multiplicator
   ptspattern <- rpoispp(chl_image)      #random poisson point process transform values into probability-density of points
   lon <- ptspattern$x                     #get locations of all points
   lat <- ptspattern$y

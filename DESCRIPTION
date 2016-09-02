@@ -16,7 +16,8 @@ Imports:
     nabor,
     ncdf4,
     spatstat,
-    stringr
+    stringr,
+    maptools
 RoxygenNote: 5.0.1
 Suggests: knitr,
     rmarkdown

@@ -8,7 +8,8 @@ trackit_2D(pts, romsobject, w_sink = 100, time = 50,
   sedimentation = FALSE, particle_radius = 0.00016,
   force_final_settling = FALSE, romsparams = NULL,
   sedimentationparams = NULL, loop_trackit = FALSE,
-  time_steps_in_s = 1800, uphill_restricted = NULL)
+  time_steps_in_s = 1800, uphill_restricted = NULL,
+  sed_at_max_speed = FALSE, mean_move = FALSE)
 }
 \arguments{
 \item{pts}{input points}
@@ -28,6 +29,8 @@ trackit_2D(pts, romsobject, w_sink = 100, time = 50,
 \item{sedimentationparams}{parameters estimated through the buildparams-function}
 
 \item{uphill_restricted}{define whether particles are restricted from moving uphill, defined as from how many meters difference particles cannot cross between cells}
+
+\item{mean_move}{to use when uphill_resticted is TRUE. Checks the final position of the particles and when usually they would be located back at their starting point for violating the uhill restriction, the code iterates to find a position in between that might still belong to the ROMS-cell the particle originates from}
 
 \item{kdtree}{kd tree}
 }

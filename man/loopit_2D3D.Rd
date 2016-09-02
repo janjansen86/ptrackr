@@ -7,7 +7,8 @@
 loopit_2D3D(pts_seeded, romsobject, roms_slices = 1, start_slice = 1,
   domain = "2D", trajectories = FALSE, speed, runtime = 10,
   looping_time = 0.25, sedimentation = FALSE, particle_radius = 0.00016,
-  time_steps_in_s = 1800, uphill_restricted = NULL)
+  time_steps_in_s = 1800, uphill_restricted = NULL,
+  sed_at_max_speed = FALSE, mean_move = FALSE)
 }
 \arguments{
 \item{pts_seeded}{matrix of particles with 3 colums (lon, lat, depth)}
@@ -33,6 +34,8 @@ loopit_2D3D(pts_seeded, romsobject, roms_slices = 1, start_slice = 1,
 \item{particle_radius}{radius of the particles, this influences the sedimentation rate with smaller values meaning less sedimentation}
 
 \item{uphill_restricted}{define whether particles are restricted from moving uphill, defined as from how many meters difference particles cannot cross between cells}
+
+\item{sed_at_max_speed}{particles will settle at all times only depending on the highest current speed given in any of the ROMS slices. Currently this only work when 4 sclices are available. Default is FALSE}
 }
 \value{
 list(pts=pts, pend=pend, stopindex=obj$stopindex, ptrack=obj$ptrack, lon_list=lon_list, idx_list=idx_list, idx_list_2D=idx_list_2D, id_list=id_list)
@@ -105,5 +108,14 @@ df <- data.frame(cbind(toyROMS$lon_u[flux],toyROMS$lat_u[flux]))
 df$cell <- cellFromXY(ra, df)
 ra[] <- tabulate(df$cell, ncell(ra))
 plot(ra)
+
+## looking at the current-slices
+roms_list <- list()
+par(mfrow=c(2,2))
+for(i in 1:4){
+  roms_list[[i]] <- rasterize(x = cbind(as.vector(toyROMS$lon_u), as.vector(toyROMS$lat_u)), y= ra, field = as.vector(sqrt((toyROMS$i_u[,,,i]^2)+(toyROMS$i_v[,,,i])^2)))
+  plot(roms_list[[i]])
+}
+par(mfrow=c(1,1))
 }
 
