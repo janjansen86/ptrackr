@@ -11,18 +11,18 @@
 #' 
 #' 
 #' 
+
+#' 
+#' 
+NULL
+
+
 #' Surface chl-a.
 #'
 #' Details ...
 #'
 #' @format ...
 "surface_chl"
-#' 
-#' 
-NULL
-
-
-
 
 #' toyROMS
 #'
