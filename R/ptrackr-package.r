@@ -27,7 +27,7 @@
 #' 
 #' Maintainer: Jan Jansen - Jan.Jansen(AT)utas.edu.au
 #' 
-#' DOI:
+#' DOI: 10.5281/zenodo.583336
 #' 
 #' URL: www.github.com/janjansen86/ptrackr
 #'  
