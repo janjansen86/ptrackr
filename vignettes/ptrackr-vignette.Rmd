@@ -12,13 +12,3 @@ vignette: >
 The `ptrackr`-package intends to provide the basic functions needed to store the positions and track the movement of individual particles through time. The package is written in the context of movement of particles in a Regional Oceanographic Modelling System (ROMS).
 The package provides functions to track particles both horizontally and in a 3D-environment.
 The main function to run particle-tracking is *loopit_2D3D*, with the other functions setting up the data for the modelling.
-
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
-```
-
-Also a quote using `>`:
-
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))

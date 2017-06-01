@@ -7,4 +7,5 @@ For a large number of points, looping over short trackit-functions and removing 
 ## other things to do: 
  - Merge the two trackit functions into a single function as most of the code is redundant (the respective lines have comments).
  - write a function for mapping the output of loopit
+ - finish vignette
 
