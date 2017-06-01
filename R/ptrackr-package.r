@@ -1,8 +1,7 @@
 #' ptrackr: a package to track individual particles through 2D- and 3D-space
 #' 
 #' The ptrackr package intends to provide the basic functions needed to store the positions and track the movement of individual particles through time and space. 
-#' The package is written in the context of movement of particles in a Regional Oceanographic Modelling System (ROMS).
-#' The package provides functions to track particles both horizontally and in a 3D-environment.
+#' The package is written in the context of movement of particles in a velocity field taken from a Regional Oceanographic Modelling System (ROMS).
 #' The main function to run particle-tracking is called "loopit_2D3D" (examples are provided below), with the other functions either being called from the main function or serving to setup the data for the modelling.
 #' More details can be found in the individual desription files.
 #'
@@ -20,6 +19,10 @@
 #' run <- loopit_2D3D(pts_seeded = pts_seeded, roms_slices = 4, romsobject = toyROMS, speed = 100, runtime = 50, sedimentation = TRUE)
 #' 
 #' plot(pts_seeded); points(run$pend, col="red", cex=0.6); points(run$pts , col="blue", cex=0.6)
+#' 
+#' @section Authors:
+#' Jan Jansen & Michael D. Sumner
+#' contact Jan.Jansen"AT"utas"DOT"edu"DOT"au
 #'  
 #' @docType package
 #' @name ptrackr
