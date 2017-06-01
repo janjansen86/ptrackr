@@ -28,6 +28,8 @@
 #' Maintainer: Jan Jansen - Jan.Jansen(AT)utas.edu.au
 #' 
 #' DOI:
+#' 
+#' URL: www.github.com/janjansen86/ptrackr
 #'  
 #' @docType package
 #' @name ptrackr
