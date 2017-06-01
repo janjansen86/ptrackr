@@ -19,7 +19,7 @@ loopit_2D3D(pts_seeded, romsobject, roms_slices = 1, start_slice = 1,
 
 \item{start_slice}{determines which roms_slice the particle-tracking starts with}
 
-\item{domain}{either 2D or 3D}
+\item{domain}{either "2D" or "3D"}
 
 \item{trajectories}{TRUE/FALSE statement to define whether to store particle trajectories (model runs much faster without storing trajectories). Default is FALSE.}
 
@@ -29,9 +29,9 @@ loopit_2D3D(pts_seeded, romsobject, roms_slices = 1, start_slice = 1,
 
 \item{looping_time}{default at 0.25 which is equal to the 6h intervall of the ROMS-model}
 
-\item{sedimentation}{TRUE/FALSE with default as FALSE, should particles settle on the seafloor depending on current speed and particle density (McCave & Swift 1976)}
+\item{sedimentation}{TRUE/FALSE statement whether particles should settle on the seafloor depending on current speed and particle density (McCave & Swift 1976). Default is FALSE,}
 
-\item{particle_radius}{radius of the particles, this influences the sedimentation rate with smaller values meaning less sedimentation}
+\item{particle_radius}{radius of the particles; this influences the sedimentation rate with smaller values meaning less sedimentation}
 
 \item{uphill_restricted}{define whether particles are restricted from moving uphill, defined as from how many meters difference particles cannot cross between cells}
 

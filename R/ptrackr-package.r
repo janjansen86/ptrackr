@@ -20,9 +20,14 @@
 #' 
 #' plot(pts_seeded); points(run$pend, col="red", cex=0.6); points(run$pts , col="blue", cex=0.6)
 #' 
+#' legend("bottomleft", pch=1, pt.cex=c(1,0.6,0.6), col=c("black","red","blue"), legend=c("seed-location","end-location","still moving"))
+#' 
 #' @section Authors:
 #' Jan Jansen & Michael D. Sumner
-#' contact Jan.Jansen"AT"utas"DOT"edu"DOT"au
+#' 
+#' Maintainer: Jan Jansen - Jan.Jansen(AT)utas.edu.au
+#' 
+#' DOI:
 #'  
 #' @docType package
 #' @name ptrackr

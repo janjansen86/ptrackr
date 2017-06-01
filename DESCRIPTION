@@ -10,7 +10,14 @@ Description: ptrackr allows to track the displacement of single particles via cu
     The original purpose of this package is tracking particles from the surface to the seafloor, and modelling the resuspension and sedimentation processes on the seafloor.
 License: GPL-3
 LazyData: TRUE
-Depends: raster
+Depends: 
+    raster, 
+    nabor, 
+    maptools, 
+    geostatsp, 
+    ncdf4, 
+    spatstat, 
+    stringr
 Imports:
     geostatsp,
     nabor,
