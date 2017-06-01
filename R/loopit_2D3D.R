@@ -9,13 +9,13 @@
 #' @param romsobject list of matrices containing ROMS-model cell-values (lon_u, lat_u, h, i_u, i_v, i_w)
 #' @param roms_slices number of time-frames to use in the particle-tracking
 #' @param start_slice determines which roms_slice the particle-tracking starts with
-#' @param domain either 2D or 3D
+#' @param domain either "2D" or "3D"
 #' @param trajectories TRUE/FALSE statement to define whether to store particle trajectories (model runs much faster without storing trajectories). Default is FALSE.
 #' @param speed (w_sink) sinking rate m/days
 #' @param runtime (time) total number fo days to run the model
 #' @param looping_time default at 0.25 which is equal to the 6h intervall of the ROMS-model
-#' @param sedimentation TRUE/FALSE with default as FALSE, should particles settle on the seafloor depending on current speed and particle density (McCave & Swift 1976)
-#' @param particle_radius radius of the particles, this influences the sedimentation rate with smaller values meaning less sedimentation
+#' @param sedimentation TRUE/FALSE statement whether particles should settle on the seafloor depending on current speed and particle density (McCave & Swift 1976). Default is FALSE,
+#' @param particle_radius radius of the particles; this influences the sedimentation rate with smaller values meaning less sedimentation
 #' @param uphill_restricted define whether particles are restricted from moving uphill, defined as from how many meters difference particles cannot cross between cells
 #' @param sed_at_max_speed particles will settle at all times only depending on the highest current speed given in any of the ROMS slices. Currently this only work when 4 sclices are available. Default is FALSE
 #' 
