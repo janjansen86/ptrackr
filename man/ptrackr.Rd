@@ -38,8 +38,8 @@ Jan Jansen & Michael D. Sumner
 
 Maintainer: Jan Jansen - Jan.Jansen(AT)utas.edu.au
 
-DOI:
+DOI: 10.5281/zenodo.583336
 
-www.github.com/janjansen86/ptrackr
+URL: www.github.com/janjansen86/ptrackr
 }
 
