@@ -4,9 +4,9 @@
 \alias{buildparams}
 \title{buildparams}
 \usage{
-buildparams(speed, time_step_in_s, p0 = 1030, p1 = 1100, cosO = 1,
-  g = 9.81, K = 0.0025, E = 1, r = 0.00016, Ucsq = -(0.05 * (p0 - p1)
-  * g * 2 * (1.5 * E)^(1/3) * r)/(p0 * K), Wd = speed,
+buildparams(speed, time_step_in_s = time_step_in_s, p0 = 1030, p1 = 1100,
+  cosO = 1, g = 9.81, K = 0.0025, E = 1, r = 0.00016, Ucsq = -(0.05
+  * (p0 - p1) * g * 2 * (1.5 * E)^(1/3) * r)/(p0 * K), Wd = speed,
   SedFunct = function(U_div, dens) time_step_in_s * (p1 * (dens) * Wd * cos0 *
   (U_div) * (U_div))/p0)
 }
