@@ -133,7 +133,7 @@ loopit_2D3D <- function(pts_seeded, romsobject, roms_slices = 1, start_slice = 1
   sliced_vector <- curr_vector[c(start_slice:length(curr_vector),1:(start_slice-1))]
   
 #   sedimentationparams <- NULL
-  if(domain == "2D") sedimentationparams <- buildparams(-speed/(60*60*24), r=particle_radius) ## sinking speed transformation into m/sec
+  if(domain == "2D") sedimentationparams <- buildparams(-speed/(60*60*24), time_step_in_s = time_steps_in_s, r=particle_radius) ## sinking speed transformation into m/sec
   
   ## prepare list with parameters of the ROMS
   romsparams <- list()
