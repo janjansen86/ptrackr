@@ -11,7 +11,7 @@
 
 
 buildparams <- function(speed, 
-                        time_step_in_s=time_step_in_s,
+                        time_step_in_s,
                         ## following the reasoning from Jenkins & Bombosch (1995) and McCave & Swift (1976)
                         p0 =1030,             #kg/m^3 seawater density
                         p1 =1100,             #kg/m^3 Diatom density (so far a quick-look-up-average density from Ierland & Peperzak (1984))

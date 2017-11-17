@@ -116,7 +116,7 @@ trackit_2D <- function(pts, romsobject, w_sink=100, time=50, sedimentation=FALSE
   
   ## different to 3D this line
   if(!is.null(sedimentationparams)){params <- sedimentationparams 
-  }else params <- buildparams(w_sink, time_steps_in_s, r=particle_radius)
+  }else params <- buildparams(w_sink, r=particle_radius)
   
   for (itime in seq_len(ntime)) {
     
